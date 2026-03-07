@@ -3,6 +3,11 @@
 # Stage 1: Build Frontend
 FROM node:18-alpine AS frontend-build
 WORKDIR /app/frontend
+
+# Increase memory limit and disable CI mode for build
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV CI=false
+
 COPY frontend/package*.json ./
 RUN npm install --legacy-peer-deps
 COPY frontend/ ./
