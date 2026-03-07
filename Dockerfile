@@ -8,6 +8,10 @@ WORKDIR /app/frontend
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV CI=false
 
+# Accept API URL as build argument
+ARG REACT_APP_API_URL=https://expense.ardalsharq.com
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
 COPY frontend/package*.json ./
 RUN npm install --legacy-peer-deps
 COPY frontend/ ./
