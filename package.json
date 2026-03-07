@@ -1,0 +1,14 @@
+{
+  "name": "expense-plan-app",
+  "version": "1.0.0",
+  "description": "Full-stack expense planning application",
+  "main": "index.js",
+  "scripts": {
+    "server": "cd backend && node server.js",
+    "client": "cd frontend && npm start",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+  },
+  "keywords": ["expense", "planning", "finance"],
+  "author": "",
+  "license": "ISC"
+}

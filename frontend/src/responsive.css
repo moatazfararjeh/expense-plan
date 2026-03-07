@@ -1,0 +1,982 @@
+/* ===== MOBILE RESPONSIVE ENHANCEMENTS ===== */
+
+/* Base Mobile Optimizations */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+}
+
+#root {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+.App {
+  width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+/* ===== TOP NAVBAR MOBILE FIX ===== */
+@media (max-width: 767px) {
+  .top-navbar {
+    flex-wrap: nowrap !important;
+    padding: 0 1rem !important;
+    height: 64px !important;
+    gap: 0.5rem !important;
+  }
+
+  .navbar-brand {
+    width: auto !important;
+    justify-content: flex-start !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .brand-name {
+    font-size: 1.1rem !important;
+  }
+
+  .mobile-nav-toggle {
+    display: inline-flex !important;
+  }
+
+  .navbar-rail {
+    width: min(360px, 90vw) !important;
+    padding: 1.5rem 1.2rem 2rem !important;
+  }
+
+  .navbar-tabs {
+    gap: 0.75rem !important;
+  }
+
+  .navbar-tabs .tab-btn {
+    font-size: 1rem !important;
+  }
+
+  .navbar-user {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+
+  .navbar-user .logout-btn {
+    font-size: 1rem !important;
+  }
+
+  .mobile-nav-overlay {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .main-content {
+    padding: 0 !important;
+  }
+
+  .tab-content {
+    padding: 0 !important;
+  }
+}
+
+/* ===== CONTENT HEADER MOBILE ===== */
+@media (max-width: 767px) {
+  .content-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .content-header h1 {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .content-subtitle {
+    font-size: 0.9rem !important;
+  }
+}
+
+/* ===== SUB-TABS MOBILE FIX ===== */
+@media (max-width: 767px) {
+  .sub-tabs,
+  div.sub-tabs {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    padding: 0.75rem !important;
+    display: flex !important;
+  }
+
+  .sub-tab-btn,
+  button.sub-tab-btn {
+    width: 100% !important;
+    flex: none !important;
+    padding: 14px 20px !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+    display: flex !important;
+  }
+
+  .sub-tab-btn span,
+  button.sub-tab-btn span {
+    font-size: 1rem !important;
+  }
+
+  .sub-tab-btn .tab-emoji {
+    font-size: 1.3rem !important;
+  }
+}
+
+/* ===== CHARTS GRID MOBILE ===== */
+@media (max-width: 767px) {
+  .charts-grid {
+    display: block !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .charts-grid > * {
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* ===== SETTINGS PAGE MOBILE ===== */
+@media (max-width: 767px) {
+  .settings-container,
+  .settings-container > div {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .settings-container .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .settings-container input,
+  .settings-container select {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 16px !important;
+  }
+
+  /* Salary change item mobile */
+  .salary-change-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+    padding: 1rem !important;
+  }
+
+  .salary-change-item > div {
+    width: 100% !important;
+  }
+
+  .salary-change-item button {
+    width: 100%;
+    justify-content: center !important;
+  }
+}
+
+/* ===== MONTHLY PROJECTION MOBILE ===== */
+@media (max-width: 767px) {
+  .projection-card,
+  .projection-container,
+  .monthly-projection-container {
+    padding: 1rem !important;
+  }
+
+  /* Summary boxes */
+  .projection-summary {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .summary-box {
+    padding: 1rem !important;
+    width: 100% !important;
+  }
+
+  .summary-label {
+    font-size: 0.85rem !important;
+  }
+
+  .summary-amount {
+    font-size: 1.25rem !important;
+  }
+
+  /* Month-by-Month Table - CARD LAYOUT FOR MOBILE */
+  .monthly-table-container {
+    margin: 1rem 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .monthly-table-container h3 {
+    font-size: 1.3rem !important;
+    margin-bottom: 1rem !important;
+    padding: 0 1rem !important;
+    color: #1F2937 !important;
+  }
+
+  .monthly-table {
+    width: 100% !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  /* Hide table structure, use cards instead */
+  .monthly-table table {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .monthly-table thead {
+    display: none !important;
+  }
+
+  .monthly-table tbody,
+  .monthly-table tfoot {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .monthly-table tr {
+    display: block !important;
+    background: white !important;
+    border-radius: 12px !important;
+    padding: 1.25rem !important;
+    margin: 0 1rem 1rem 1rem !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+    border: 1px solid #E5E7EB !important;
+  }
+
+  .monthly-table tbody tr.current {
+    border: 2px solid var(--primary-color) !important;
+    box-shadow: 0 4px 12px rgba(15, 76, 129, 0.25) !important;
+  }
+
+  .monthly-table td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    padding: 0.65rem 0 !important;
+    border: none !important;
+    white-space: normal !important;
+    background: transparent !important;
+  }
+
+  .monthly-table td::before {
+    content: attr(data-label) !important;
+    font-weight: 600 !important;
+    color: #6B7280 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    font-size: 0.75rem !important;
+    flex: 1;
+    text-align: left !important;
+  }
+
+  /* Month cell - special styling as header */
+  .monthly-table .month-cell {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    color: #1F2937 !important;
+    margin-bottom: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    border-bottom: 2px solid #E5E7EB !important;
+    justify-content: center !important;
+  }
+
+  /* Amount cells */
+  .monthly-table .amount-cell {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace !important;
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    justify-content: center !important;
+    padding: 0.5rem 0 !important;
+  }
+
+  .monthly-table .positive-cell {
+    color: #059669 !important;
+  }
+
+  .monthly-table .negative-cell {
+    color: #DC2626 !important;
+  }
+
+  /* Footer - Year Total */
+  .monthly-table tfoot tr {
+    background: var(--primary-gradient) !important;
+    color: white !important;
+    padding: 1.5rem !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(15, 76, 129, 0.35) !important;
+  }
+
+  .monthly-table tfoot td {
+    color: white !important;
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    padding: 0.5rem 0 !important;
+    justify-content: center !important;
+  }
+
+  .monthly-table tfoot td:first-child {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+    justify-content: center !important;
+  }
+
+  /* Remove scroll hint */
+  .monthly-table::after {
+    display: none !important;
+  }
+
+  /* Alternative: Card-based layout for months */
+  .monthly-table.mobile-cards table {
+    display: block !important;
+  }
+
+  .monthly-table.mobile-cards thead {
+    display: none !important;
+  }
+
+  .monthly-table.mobile-cards tbody {
+    display: block !important;
+  }
+
+  .monthly-table.mobile-cards tr {
+    display: block !important;
+    background: white !important;
+    border-radius: 0.75rem !important;
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  }
+
+  .monthly-table.mobile-cards td {
+    display: flex !important;
+    justify-content: space-between !important;
+    padding: 0.5rem 0 !important;
+    border: none !important;
+    white-space: normal !important;
+  }
+
+  .monthly-table.mobile-cards td::before {
+    content: attr(data-label) !important;
+    font-weight: 600 !important;
+    color: #6B7280 !important;
+  }
+
+  .monthly-table.mobile-cards .month-cell {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    border-bottom: 2px solid #E5E7EB !important;
+  }
+
+  .monthly-table.mobile-cards .month-cell::before {
+    display: none !important;
+  }
+
+  /* Chart sections */
+  .chart-section {
+    margin-top: 1.5rem !important;
+    padding: 1rem !important;
+  }
+
+  .chart-section h3 {
+    font-size: 1.1rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  /* Expense details panel */
+  .expense-details-panel {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    z-index: 2000 !important;
+  }
+
+  .expense-details-grid {
+    display: block !important;
+    overflow-y: auto !important;
+    max-height: calc(100vh - 100px) !important;
+  }
+
+  .expense-details-section {
+    margin-bottom: 1.5rem !important;
+  }
+
+  .expense-item-info {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.25rem !important;
+  }
+
+  .projection-month > div {
+    width: 100% !important;
+  }
+}
+
+/* ===== ENHANCED RESPONSIVE BREAKPOINTS ===== */
+
+/* Extra Small Devices (phones, less than 380px) */
+@media (max-width: 379px) {
+  body {
+    padding: 0.5rem;
+    font-size: 14px;
+  }
+
+  .App {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  .header {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.75rem;
+  }
+
+  .header h1 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .header p {
+    font-size: 0.85rem;
+  }
+
+  .user-info span {
+    font-size: 0.9rem;
+  }
+
+  .btn, .btn-primary, .btn-secondary, .btn-danger {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    min-height: 44px; /* Touch-friendly */
+  }
+
+  .card {
+    padding: 0;
+    margin: 0;
+  }
+
+  .card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .card h3 {
+    font-size: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-group label {
+    font-size: 0.9rem;
+    margin-bottom: 0.375rem;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    padding: 0.75rem;
+    min-height: 44px;
+  }
+
+  .dashboard {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+  }
+}
+
+/* Small Devices (phones, 380px to 575px) */
+@media (min-width: 380px) and (max-width: 575px) {
+  body {
+    padding: 0.75rem;
+    font-size: 15px;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .header p {
+    font-size: 0.95rem;
+  }
+
+  .btn {
+    min-height: 44px;
+  }
+
+  .form-group input,
+  .form-group select {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    min-height: 44px;
+  }
+
+  .dashboard {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Medium Devices (tablets, 576px to 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+  .App {
+    max-width: 100%;
+  }
+
+  .header h1 {
+    font-size: 1.75rem;
+  }
+
+  .dashboard {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .tabs {
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 140px;
+  }
+}
+
+/* Large Tablets (768px to 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .dashboard {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  .tab-btn {
+    flex: 0 1 auto;
+    min-width: 120px;
+  }
+}
+
+/* Landscape Phone Support */
+@media (max-height: 480px) and (orientation: landscape) {
+  .header {
+    padding: 0.75rem 1rem;
+  }
+
+  .header h1 {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .header p {
+    display: none; /* Hide subtitle in landscape */
+  }
+
+  .user-info {
+    flex-direction: row;
+    gap: 0.75rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* ===== MOBILE-OPTIMIZED TABLES ===== */
+@media (max-width: 767px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  thead {
+    display: none; /* Hide table headers on mobile */
+  }
+
+  tbody {
+    display: block;
+  }
+
+  tr {
+    display: block;
+    margin-bottom: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  td {
+    display: block;
+    text-align: right;
+    padding: 0.5rem 0;
+    border: none;
+    position: relative;
+    padding-left: 50%;
+  }
+
+  td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  td:last-child {
+    border-bottom: none;
+  }
+
+  /* Alternative: Horizontal scroll for tables */
+  .table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-responsive table {
+    white-space: nowrap;
+    min-width: 600px;
+  }
+}
+
+/* ===== MOBILE NAVIGATION ===== */
+@media (max-width: 767px) {
+  .tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+    padding-bottom: 0.5rem;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+
+  .tab-btn {
+    flex-shrink: 0;
+    min-width: 100px;
+    white-space: nowrap;
+  }
+
+  .sub-tabs {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .sub-tab-btn {
+    width: 100%;
+    text-align: left;
+    justify-content: flex-start;
+  }
+}
+
+/* ===== MOBILE-FRIENDLY FORMS ===== */
+@media (max-width: 767px) {
+  .form-row {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .form-row > *,
+  .form-row > div {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .form-group {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea,
+  input,
+  select,
+  textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 16px !important;
+    padding: 0.75rem !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Override any inline styles for inputs */
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="email"],
+  select {
+    font-size: 16px !important;
+  }
+
+  .checkbox-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Increase touch targets */
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+  }
+
+  label {
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Button groups */
+  .button-group,
+  .form-actions {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .button-group button,
+  .form-actions button {
+    width: 100% !important;
+  }
+}
+
+/* ===== MOBILE-OPTIMIZED CARDS ===== */
+@media (max-width: 767px) {
+  .expense-item,
+  .income-item,
+  .transaction-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .expense-item .expense-details,
+  .income-item .income-details {
+    width: 100%;
+    padding-right: 0 !important;
+  }
+
+  .expense-item > div[style*="position: absolute"],
+  .income-item > div[style*="position: absolute"] {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    width: 100%;
+    margin-top: 0.75rem !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    gap: 0.5rem;
+  }
+
+  .expense-item button,
+  .income-item button {
+    flex: 1;
+    min-height: 40px;
+  }
+}
+
+/* ===== STAT CARDS RESPONSIVE ===== */
+@media (max-width: 767px) {
+  .stat-card {
+    padding: 1.25rem;
+  }
+
+  .stat-value {
+    font-size: 1.75rem;
+  }
+
+  .stat-label {
+    font-size: 0.9rem;
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+}
+
+/* ===== CHARTS RESPONSIVE ===== */
+@media (max-width: 767px) {
+  .chart-container {
+    padding: 1rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chart-container canvas {
+    max-width: 100%;
+    height: auto !important;
+    min-height: 250px;
+  }
+}
+
+/* ===== MODAL RESPONSIVE ===== */
+@media (max-width: 767px) {
+  .modal-content {
+    width: 95%;
+    max-width: 95%;
+    margin: 1rem auto;
+    padding: 1.5rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+
+  .modal-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .modal-close {
+    width: 32px;
+    height: 32px;
+    font-size: 1.5rem;
+  }
+}
+
+/* ===== LOADING AND EMPTY STATES ===== */
+@media (max-width: 767px) {
+  .loading,
+  .error-message,
+  .empty-state {
+    padding: 2rem 1rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* ===== ACCESSIBILITY FOR MOBILE ===== */
+@media (max-width: 767px) {
+  /* Larger touch targets */
+  a, button, input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better focus indicators */
+  *:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+
+  /* Prevent text from being too small */
+  small, .small-text {
+    font-size: 0.875rem !important;
+  }
+}
+
+/* ===== ORIENTATION CHANGE HANDLING ===== */
+@media (orientation: portrait) {
+  .landscape-only {
+    display: none;
+  }
+}
+
+@media (orientation: landscape) {
+  .portrait-only {
+    display: none;
+  }
+
+  .landscape-optimize {
+    max-width: 100vw;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* ===== PRINT STYLES FOR MOBILE ===== */
+@media print {
+  body {
+    background: white;
+    padding: 0;
+  }
+
+  .header,
+  .tabs,
+  .btn,
+  button {
+    display: none !important;
+  }
+
+  .card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+/* ===== DARK MODE SUPPORT (if needed) ===== */
+@media (prefers-color-scheme: dark) {
+  /* Add dark mode styles here if needed */
+}
+
+/* ===== REDUCED MOTION SUPPORT ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== HIGH CONTRAST MODE ===== */
+@media (prefers-contrast: high) {
+  button, .btn {
+    border-width: 2px;
+  }
+
+  input, select, textarea {
+    border-width: 2px;
+  }
+}
