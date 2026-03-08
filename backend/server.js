@@ -469,6 +469,17 @@ app.delete('/api/salary-changes/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Global error handler - must be before catch-all route
+app.use((err, req, res, next) => {
+  console.error('Global error handler:', err);
+  console.error('Error stack:', err.stack);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'production' ? 'An error occurred' : err.message,
+    details: process.env.NODE_ENV === 'production' ? undefined : err.stack
+  });
+});
+
 // Serve React app for any other route (must be after API routes)
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
