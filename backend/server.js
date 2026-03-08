@@ -17,7 +17,8 @@ const defaultAllowedOrigins = [
   'http://localhost:2002',
   'https://localhost:2001',
   'http://localhost:1000',
-  'https://localhost:1001'
+  'https://localhost:1001',
+  'https://expense.ardalsharq.com'
 ];
 
 const envAllowedOrigins = (process.env.CORS_ORIGINS || '')
@@ -29,6 +30,7 @@ const allowedOrigins = [...new Set([...defaultAllowedOrigins, ...envAllowedOrigi
 
 const corsOptions = {
   origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, Postman, or same-origin)
     if (!origin) {
       return callback(null, true);
     }
@@ -41,6 +43,12 @@ const corsOptions = {
       return callback(null, true);
     }
 
+    // Allow any subdomain of ardalsharq.com in production
+    if (/^https?:\/\/.*\.ardalsharq\.com$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    console.log('CORS blocked origin:', origin);
     return callback(new Error('Not allowed by CORS'));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
