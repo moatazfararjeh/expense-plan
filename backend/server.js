@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 require('dotenv').config();
 
-const pool = require('./db');
+const supabase = require('./supabase');
 const authRoutes = require('./routes/auth');
 const { authenticateToken } = require('./middleware/auth');
 const { encryptValue, decryptValue, decryptFields, decryptArray } = require('./encryption');
@@ -77,11 +77,17 @@ app.use('/api/auth', authRoutes);
 // Get user settings
 app.get('/api/settings', authenticateToken, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM user_settings WHERE user_id = $1', [req.user.id]);
-    if (result.rows[0]) {
-      // Parse categories if it's a string
-      const settings = result.rows[0];
-      
+    const { data: settings, error } = await supabase
+      .from('user_settings')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {  // PGRST116 is "not found" error
+      throw error;
+    }
+
+    if (settings) {
       // Decrypt sensitive fields
       settings.monthly_salary = decryptValue(settings.monthly_salary) || 0;
       settings.opening_balance = decryptValue(settings.opening_balance) || 0;
@@ -116,7 +122,16 @@ app.post('/api/settings', authenticateToken, async (req, res) => {
   const { monthly_salary, opening_balance, plan_start_date, currency, categories } = req.body;
   
   try {
-    const checkResult = await pool.query('SELECT * FROM user_settings WHERE user_id = $1', [req.user.id]);
+    // Check if settings exist
+    const { data: existing, error: checkError } = await supabase
+      .from('user_settings')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw checkError;
+    }
     
     // Convert categories array to JSON string for storage
     const categoriesJson = categories ? JSON.stringify(categories) : null;
@@ -126,20 +141,41 @@ app.post('/api/settings', authenticateToken, async (req, res) => {
     const encryptedBalance = encryptValue(opening_balance !== undefined ? opening_balance : 0);
     
     let result;
-    if (checkResult.rows.length > 0) {
-      result = await pool.query(
-        'UPDATE user_settings SET monthly_salary = $1, opening_balance = $2, plan_start_date = $3, currency = $4, categories = $5, updated_at = CURRENT_TIMESTAMP WHERE user_id = $6 RETURNING *',
-        [encryptedSalary, encryptedBalance, plan_start_date, currency || 'SAR', categoriesJson, req.user.id]
-      );
+    if (existing) {
+      // Update existing settings
+      result = await supabase
+        .from('user_settings')
+        .update({
+          monthly_salary: encryptedSalary,
+          opening_balance: encryptedBalance,
+          plan_start_date,
+          currency: currency || 'SAR',
+          categories: categoriesJson,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', req.user.id)
+        .select()
+        .single();
     } else {
-      result = await pool.query(
-        'INSERT INTO user_settings (user_id, monthly_salary, opening_balance, plan_start_date, currency, categories) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-        [req.user.id, encryptedSalary, encryptedBalance, plan_start_date || new Date().toISOString().split('T')[0], currency || 'SAR', categoriesJson]
-      );
+      // Insert new settings
+      result = await supabase
+        .from('user_settings')
+        .insert([{
+          user_id: req.user.id,
+          monthly_salary: encryptedSalary,
+          opening_balance: encryptedBalance,
+          plan_start_date: plan_start_date || new Date().toISOString().split('T')[0],
+          currency: currency || 'SAR',
+          categories: categoriesJson
+        }])
+        .select()
+        .single();
     }
     
+    if (result.error) throw result.error;
+    
     // Decrypt values for response
-    const settings = result.rows[0];
+    const settings = result.data;
     settings.monthly_salary = decryptValue(settings.monthly_salary);
     settings.opening_balance = decryptValue(settings.opening_balance);
     
@@ -157,9 +193,16 @@ app.post('/api/settings', authenticateToken, async (req, res) => {
 // Get all monthly expenses
 app.get('/api/monthly-expenses', authenticateToken, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM monthly_expenses WHERE user_id = $1 ORDER BY id DESC', [req.user.id]);
+    const { data, error } = await supabase
+      .from('monthly_expenses')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .order('id', { ascending: false });
+    
+    if (error) throw error;
+    
     // Decrypt amount field
-    const decryptedRows = decryptArray(result.rows, ['amount']);
+    const decryptedRows = decryptArray(data || [], ['amount']);
     res.json(decryptedRows);
   } catch (error) {
     console.error('Error fetching monthly expenses:', error);
@@ -175,12 +218,26 @@ app.post('/api/monthly-expenses', authenticateToken, async (req, res) => {
     const currentYear = new Date().getFullYear();
     // Encrypt amount before storing
     const encryptedAmount = encryptValue(amount);
-    const result = await pool.query(
-      'INSERT INTO monthly_expenses (user_id, name, amount, category, start_month, end_month, start_year, end_year) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-      [req.user.id, name, encryptedAmount, category || 'Other', start_month || 1, end_month || 12, start_year || currentYear, end_year || currentYear]
-    );
+    
+    const { data, error } = await supabase
+      .from('monthly_expenses')
+      .insert([{
+        user_id: req.user.id,
+        name,
+        amount: encryptedAmount,
+        category: category || 'Other',
+        start_month: start_month || 1,
+        end_month: end_month || 12,
+        start_year: start_year || currentYear,
+        end_year: end_year || currentYear
+      }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
     // Decrypt for response
-    const expense = decryptFields(result.rows[0], ['amount']);
+    const expense = decryptFields(data, ['amount']);
     res.json(expense);
   } catch (error) {
     console.error('Error adding monthly expense:', error);
@@ -193,7 +250,14 @@ app.delete('/api/monthly-expenses/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   
   try {
-    await pool.query('DELETE FROM monthly_expenses WHERE id = $1 AND user_id = $2', [id, req.user.id]);
+    const { error } = await supabase
+      .from('monthly_expenses')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', req.user.id);
+    
+    if (error) throw error;
+    
     res.json({ message: 'Expense deleted successfully' });
   } catch (error) {
     console.error('Error deleting monthly expense:', error);
@@ -210,17 +274,32 @@ app.put('/api/monthly-expenses/:id', authenticateToken, async (req, res) => {
     const currentYear = new Date().getFullYear();
     // Encrypt amount before updating
     const encryptedAmount = encryptValue(amount);
-    const result = await pool.query(
-      'UPDATE monthly_expenses SET name = $1, amount = $2, category = $3, start_month = $4, end_month = $5, start_year = $6, end_year = $7 WHERE id = $8 AND user_id = $9 RETURNING *',
-      [name, encryptedAmount, category || 'Other', start_month || 1, end_month || 12, start_year || currentYear, end_year || currentYear, id, req.user.id]
-    );
     
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Expense not found' });
+    const { data, error } = await supabase
+      .from('monthly_expenses')
+      .update({
+        name,
+        amount: encryptedAmount,
+        category: category || 'Other',
+        start_month: start_month || 1,
+        end_month: end_month || 12,
+        start_year: start_year || currentYear,
+        end_year: end_year || currentYear
+      })
+      .eq('id', id)
+      .eq('user_id', req.user.id)
+      .select()
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Expense not found' });
+      }
+      throw error;
     }
     
     // Decrypt for response
-    const expense = decryptFields(result.rows[0], ['amount']);
+    const expense = decryptFields(data, ['amount']);
     res.json(expense);
   } catch (error) {
     console.error('Error updating monthly expense:', error);
@@ -231,9 +310,17 @@ app.put('/api/monthly-expenses/:id', authenticateToken, async (req, res) => {
 // Get all daily transactions
 app.get('/api/transactions', authenticateToken, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM daily_transactions WHERE user_id = $1 ORDER BY transaction_date DESC, id DESC', [req.user.id]);
+    const { data, error } = await supabase
+      .from('daily_transactions')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .order('transaction_date', { ascending: false })
+      .order('id', { ascending: false });
+    
+    if (error) throw error;
+    
     // Decrypt amount field
-    const decryptedRows = decryptArray(result.rows, ['amount']);
+    const decryptedRows = decryptArray(data || [], ['amount']);
     res.json(decryptedRows);
   } catch (error) {
     console.error('Error fetching transactions:', error);
@@ -248,12 +335,23 @@ app.post('/api/transactions', authenticateToken, async (req, res) => {
   try {
     // Encrypt amount before storing
     const encryptedAmount = encryptValue(amount);
-    const result = await pool.query(
-      'INSERT INTO daily_transactions (user_id, description, amount, transaction_date, category) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [req.user.id, description, encryptedAmount, transaction_date, category || 'Other']
-    );
+    
+    const { data, error } = await supabase
+      .from('daily_transactions')
+      .insert([{
+        user_id: req.user.id,
+        description,
+        amount: encryptedAmount,
+        transaction_date,
+        category: category || 'Other'
+      }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
     // Decrypt for response
-    const transaction = decryptFields(result.rows[0], ['amount']);
+    const transaction = decryptFields(data, ['amount']);
     res.json(transaction);
   } catch (error) {
     console.error('Error adding transaction:', error);
@@ -269,15 +367,29 @@ app.put('/api/transactions/:id', authenticateToken, async (req, res) => {
   try {
     // Encrypt amount before updating
     const encryptedAmount = encryptValue(amount);
-    const result = await pool.query(
-      'UPDATE daily_transactions SET description = $1, amount = $2, transaction_date = $3, category = $4 WHERE id = $5 AND user_id = $6 RETURNING *',
-      [description, encryptedAmount, transaction_date, category || 'Other', id, req.user.id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Transaction not found' });
+    
+    const { data, error } = await supabase
+      .from('daily_transactions')
+      .update({
+        description,
+        amount: encryptedAmount,
+        transaction_date,
+        category: category || 'Other'
+      })
+      .eq('id', id)
+      .eq('user_id', req.user.id)
+      .select()
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Transaction not found' });
+      }
+      throw error;
     }
+    
     // Decrypt for response
-    const transaction = decryptFields(result.rows[0], ['amount']);
+    const transaction = decryptFields(data, ['amount']);
     res.json(transaction);
   } catch (error) {
     console.error('Error updating transaction:', error);
@@ -290,7 +402,13 @@ app.delete('/api/transactions/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   
   try {
-    await pool.query('DELETE FROM daily_transactions WHERE id = $1 AND user_id = $2', [id, req.user.id]);
+    const { error } = await supabase
+      .from('daily_transactions')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', req.user.id);
+    
+    if (error) throw error;
     res.json({ message: 'Transaction deleted successfully' });
   } catch (error) {
     console.error('Error deleting transaction:', error);
@@ -301,9 +419,16 @@ app.delete('/api/transactions/:id', authenticateToken, async (req, res) => {
 // Get all additional income sources
 app.get('/api/additional-income', authenticateToken, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM additional_income WHERE user_id = $1 ORDER BY id DESC', [req.user.id]);
+    const { data, error } = await supabase
+      .from('additional_income')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .order('id', { ascending: false });
+    
+    if (error) throw error;
+    
     // Decrypt amount field
-    const decryptedRows = decryptArray(result.rows, ['amount']);
+    const decryptedRows = decryptArray(data || [], ['amount']);
     res.json(decryptedRows);
   } catch (error) {
     console.error('Error fetching additional income:', error);
@@ -318,12 +443,24 @@ app.post('/api/additional-income', authenticateToken, async (req, res) => {
   try {
     // Encrypt amount before storing
     const encryptedAmount = encryptValue(amount);
-    const result = await pool.query(
-      'INSERT INTO additional_income (user_id, name, amount, frequency, category, income_month) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [req.user.id, name, encryptedAmount, frequency || 'Monthly', category || 'Other', income_month || null]
-    );
+    
+    const { data, error } = await supabase
+      .from('additional_income')
+      .insert([{
+        user_id: req.user.id,
+        name,
+        amount: encryptedAmount,
+        frequency: frequency || 'Monthly',
+        category: category || 'Other',
+        income_month: income_month || null
+      }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
     // Decrypt for response
-    const income = decryptFields(result.rows[0], ['amount']);
+    const income = decryptFields(data, ['amount']);
     res.json(income);
   } catch (error) {
     console.error('Error adding additional income:', error);
@@ -336,7 +473,14 @@ app.delete('/api/additional-income/:id', authenticateToken, async (req, res) => 
   const { id } = req.params;
   
   try {
-    await pool.query('DELETE FROM additional_income WHERE id = $1 AND user_id = $2', [id, req.user.id]);
+    const { error } = await supabase
+      .from('additional_income')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', req.user.id);
+    
+    if (error) throw error;
+    
     res.json({ message: 'Additional income deleted successfully' });
   } catch (error) {
     console.error('Error deleting additional income:', error);
@@ -347,58 +491,63 @@ app.delete('/api/additional-income/:id', authenticateToken, async (req, res) => 
 // Get summary/statistics
 app.get('/api/summary', authenticateToken, async (req, res) => {
   try {
-    const settingsResult = await pool.query('SELECT * FROM user_settings WHERE user_id = $1', [req.user.id]);
-    const monthlyExpensesResult = await pool.query('SELECT * FROM monthly_expenses WHERE user_id = $1', [req.user.id]);
-    const transactionsResult = await pool.query('SELECT SUM(amount::numeric) as total FROM daily_transactions WHERE user_id = $1', [req.user.id]);
-    const additionalIncomeResult = await pool.query('SELECT * FROM additional_income WHERE user_id = $1', [req.user.id]);
+    // Fetch all data in parallel using Supabase
+    const [settingsResult, monthlyExpensesResult, transactionsResult, additionalIncomeResult] = await Promise.all([
+      supabase.from('user_settings').select('*').eq('user_id', req.user.id).single(),
+      supabase.from('monthly_expenses').select('*').eq('user_id', req.user.id),
+      supabase.from('daily_transactions').select('amount').eq('user_id', req.user.id),
+      supabase.from('additional_income').select('*').eq('user_id', req.user.id)
+    ]);
     
     // Decrypt salary and calculate totals
-    const salary = decryptValue(settingsResult.rows[0]?.monthly_salary) || 0;
+    const salary = decryptValue(settingsResult.data?.monthly_salary) || 0;
     
-    // Decrypt daily transactions - handle encrypted values
+    // Decrypt daily transactions
     let dailyTransactions = 0;
-    if (transactionsResult.rows[0]?.total) {
-      // If we have aggregated result, we need to fetch and decrypt individual rows
-      const individualTransactions = await pool.query('SELECT amount FROM daily_transactions WHERE user_id = $1', [req.user.id]);
-      dailyTransactions = individualTransactions.rows.reduce((sum, row) => {
+    if (transactionsResult.data && transactionsResult.data.length > 0) {
+      dailyTransactions = transactionsResult.data.reduce((sum, row) => {
         return sum + (decryptValue(row.amount) || 0);
       }, 0);
     }
     
     // Calculate monthly expenses considering date ranges - decrypt amounts
     let totalYearlyRecurringExpenses = 0;
-    monthlyExpensesResult.rows.forEach(expense => {
-      const amount = decryptValue(expense.amount) || 0;
-      const startMonth = expense.start_month || 1;
-      const endMonth = expense.end_month || 12;
-      const monthsActive = endMonth >= startMonth ? (endMonth - startMonth + 1) : (12 - startMonth + endMonth + 1);
-      totalYearlyRecurringExpenses += amount * monthsActive;
-    });
+    if (monthlyExpensesResult.data) {
+      monthlyExpensesResult.data.forEach(expense => {
+        const amount = decryptValue(expense.amount) || 0;
+        const startMonth = expense.start_month || 1;
+        const endMonth = expense.end_month || 12;
+        const monthsActive = endMonth >= startMonth ? (endMonth - startMonth + 1) : (12 - startMonth + endMonth + 1);
+        totalYearlyRecurringExpenses += amount * monthsActive;
+      });
+    }
     
     // Calculate average monthly expenses
     const avgMonthlyExpenses = totalYearlyRecurringExpenses / 12;
     
     // Calculate additional income (convert to monthly) - decrypt amounts
     let totalAdditionalMonthlyIncome = 0;
-    additionalIncomeResult.rows.forEach(income => {
-      const amount = decryptValue(income.amount) || 0;
-      switch(income.frequency) {
-        case 'Weekly':
-          totalAdditionalMonthlyIncome += amount * 4.33; // avg weeks per month
-          break;
-        case 'Bi-weekly':
-          totalAdditionalMonthlyIncome += amount * 2.17; // avg bi-weeks per month
-          break;
-        case 'Monthly':
-          totalAdditionalMonthlyIncome += amount;
-          break;
-        case 'Yearly':
-          totalAdditionalMonthlyIncome += amount / 12;
-          break;
-        default:
-          totalAdditionalMonthlyIncome += amount;
-      }
-    });
+    if (additionalIncomeResult.data) {
+      additionalIncomeResult.data.forEach(income => {
+        const amount = decryptValue(income.amount) || 0;
+        switch(income.frequency) {
+          case 'Weekly':
+            totalAdditionalMonthlyIncome += amount * 4.33; // avg weeks per month
+            break;
+          case 'Bi-weekly':
+            totalAdditionalMonthlyIncome += amount * 2.17; // avg bi-weeks per month
+            break;
+          case 'Monthly':
+            totalAdditionalMonthlyIncome += amount;
+            break;
+          case 'Yearly':
+            totalAdditionalMonthlyIncome += amount / 12;
+            break;
+          default:
+            totalAdditionalMonthlyIncome += amount;
+        }
+      });
+    }
     
     const totalMonthlyIncome = salary + totalAdditionalMonthlyIncome;
     const yearlySalary = salary * 12;
@@ -431,12 +580,16 @@ app.get('/api/summary', authenticateToken, async (req, res) => {
 // Get salary changes
 app.get('/api/salary-changes', authenticateToken, async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM salary_changes WHERE user_id = $1 ORDER BY effective_date ASC',
-      [req.user.id]
-    );
+    const { data, error } = await supabase
+      .from('salary_changes')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .order('effective_date', { ascending: true });
+    
+    if (error) throw error;
+    
     // Decrypt amount field
-    const decryptedRows = decryptArray(result.rows, ['amount']);
+    const decryptedRows = decryptArray(data || [], ['amount']);
     res.json(decryptedRows);
   } catch (error) {
     console.error('Error fetching salary changes:', error);
@@ -451,12 +604,22 @@ app.post('/api/salary-changes', authenticateToken, async (req, res) => {
   try {
     // Encrypt amount before storing
     const encryptedAmount = encryptValue(amount);
-    const result = await pool.query(
-      'INSERT INTO salary_changes (user_id, amount, effective_date, notes) VALUES ($1, $2, $3, $4) RETURNING *',
-      [req.user.id, encryptedAmount, effective_date, notes || '']
-    );
+    
+    const { data, error } = await supabase
+      .from('salary_changes')
+      .insert([{
+        user_id: req.user.id,
+        amount: encryptedAmount,
+        effective_date,
+        notes: notes || ''
+      }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
     // Decrypt for response
-    const salaryChange = decryptFields(result.rows[0], ['amount']);
+    const salaryChange = decryptFields(data, ['amount']);
     res.json(salaryChange);
   } catch (error) {
     console.error('Error adding salary change:', error);
@@ -469,7 +632,14 @@ app.delete('/api/salary-changes/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   
   try {
-    await pool.query('DELETE FROM salary_changes WHERE id = $1 AND user_id = $2', [id, req.user.id]);
+    const { error } = await supabase
+      .from('salary_changes')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', req.user.id);
+    
+    if (error) throw error;
+    
     res.json({ message: 'Salary change deleted successfully' });
   } catch (error) {
     console.error('Error deleting salary change:', error);

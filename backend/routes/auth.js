@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const pool = require('../db');
+const supabase = require('../supabase');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
 const { generateDEK, wrapDEK, unwrapDEK } = require('../encryption');
 
@@ -21,12 +21,14 @@ router.post('/register', async (req, res) => {
 
   try {
     // Check if user already exists
-    const existingUser = await pool.query(
-      'SELECT * FROM users WHERE email = $1 OR username = $2',
-      [email, username]
-    );
+    const { data: existingUsers, error: checkError } = await supabase
+      .from('users')
+      .select('*')
+      .or(`email.eq.${email},username.eq.${username}`);
 
-    if (existingUser.rows.length > 0) {
+    if (checkError) throw checkError;
+
+    if (existingUsers && existingUsers.length > 0) {
       return res.status(400).json({ error: 'Username or email already exists' });
     }
 
@@ -41,27 +43,35 @@ router.post('/register', async (req, res) => {
     const wrappedDEK = wrapDEK(dek, password, email);
 
     // Create user with wrapped DEK
-    const result = await pool.query(
-      'INSERT INTO users (username, email, password, encryption_key_wrapped) VALUES ($1, $2, $3, $4) RETURNING id, username, email, created_at',
-      [username, email, hashedPassword, wrappedDEK]
-    );
+    const { data: newUser, error: insertError } = await supabase
+      .from('users')
+      .insert([
+        {
+          username,
+          email,
+          password: hashedPassword,
+          encryption_key_wrapped: wrappedDEK
+        }
+      ])
+      .select('id, username, email, created_at')
+      .single();
 
-    const user = result.rows[0];
+    if (insertError) throw insertError;
 
-    // Generate JWT token (also include wrapped DEK for client-side storage if needed)
+    // Generate JWT token
     const token = jwt.sign({ 
-      id: user.id, 
-      username: user.username,
-      email: user.email
+      id: newUser.id, 
+      username: newUser.username,
+      email: newUser.email
     }, JWT_SECRET, { expiresIn: '7d' });
 
     res.status(201).json({
       message: 'User registered successfully',
       token,
       user: {
-        id: user.id,
-        username: user.username,
-        email: user.email
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email
       }
     });
   } catch (error) {
@@ -80,13 +90,18 @@ router.post('/login', async (req, res) => {
 
   try {
     // Find user
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const { data: users, error: queryError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email);
 
-    if (result.rows.length === 0) {
+    if (queryError) throw queryError;
+
+    if (!users || users.length === 0) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const user = result.rows[0];
+    const user = users[0];
 
     // Check password
     const validPassword = await bcrypt.compare(password, user.password);
@@ -149,16 +164,20 @@ router.get('/me', async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const result = await pool.query(
-      'SELECT id, username, email, created_at FROM users WHERE id = $1',
-      [decoded.id]
-    );
+    
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, username, email, created_at')
+      .eq('id', decoded.id)
+      .single();
 
-    if (result.rows.length === 0) {
+    if (error) throw error;
+
+    if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json({ user: result.rows[0] });
+    res.json({ user });
   } catch (error) {
     console.error('Auth error:', error);
     res.status(403).json({ error: 'Invalid token' });
@@ -180,16 +199,17 @@ router.post('/change-password', authenticateToken, async (req, res) => {
 
   try {
     // Get user data
-    const result = await pool.query(
-      'SELECT * FROM users WHERE id = $1',
-      [userId]
-    );
+    const { data: user, error: queryError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single();
 
-    if (result.rows.length === 0) {
+    if (queryError) throw queryError;
+
+    if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-
-    const user = result.rows[0];
 
     // Verify old password
     const validPassword = await bcrypt.compare(oldPassword, user.password);
@@ -213,10 +233,15 @@ router.post('/change-password', authenticateToken, async (req, res) => {
     const newHashedPassword = await bcrypt.hash(newPassword, 10);
 
     // Update password and wrapped DEK
-    await pool.query(
-      'UPDATE users SET password = $1, encryption_key_wrapped = $2 WHERE id = $3',
-      [newHashedPassword, newWrappedDEK, userId]
-    );
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        password: newHashedPassword,
+        encryption_key_wrapped: newWrappedDEK
+      })
+      .eq('id', userId);
+
+    if (updateError) throw updateError;
 
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
@@ -246,13 +271,18 @@ router.post('/reset-password', async (req, res) => {
   
   try {
     // Get user
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const { data: users, error: queryError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email);
 
-    if (result.rows.length === 0) {
+    if (queryError) throw queryError;
+
+    if (!users || users.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const user = result.rows[0];
+    const user = users[0];
 
     // CRITICAL SECURITY WARNING:
     // Resetting password means the old DEK cannot be unwrapped
@@ -271,10 +301,15 @@ router.post('/reset-password', async (req, res) => {
     const newHashedPassword = await bcrypt.hash(newPassword, 10);
 
     // Update user with new password and new DEK
-    await pool.query(
-      'UPDATE users SET password = $1, encryption_key_wrapped = $2 WHERE id = $3',
-      [newHashedPassword, newWrappedDEK, user.id]
-    );
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        password: newHashedPassword,
+        encryption_key_wrapped: newWrappedDEK
+      })
+      .eq('id', user.id);
+
+    if (updateError) throw updateError;
 
     // WARNING: User's old encrypted data is now inaccessible
     // You may want to delete or mark old data as orphaned
