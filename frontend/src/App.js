@@ -467,6 +467,7 @@ function App() {
                   incomes={additionalIncomes}
                   onAdd={addAdditionalIncome}
                   onDelete={deleteAdditionalIncome}
+                  currency={currency}
                 />
               </div>
             )}

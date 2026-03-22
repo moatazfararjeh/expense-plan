@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 
 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-function AdditionalIncome({ incomes, onAdd, onDelete }) {
+function AdditionalIncome({ incomes, onAdd, onDelete, currency = 'SAR' }) {
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [frequency, setFrequency] = useState('Monthly');
@@ -104,19 +104,19 @@ function AdditionalIncome({ incomes, onAdd, onDelete }) {
         </div>
         <div className="header-pill">
           <span>Monthly Boost</span>
-          <strong>{summaryStats.monthlyRecurring.toLocaleString(undefined, { maximumFractionDigits: 0 })} SAR</strong>
+          <strong>{summaryStats.monthlyRecurring.toLocaleString(undefined, { maximumFractionDigits: 0 })} {currency}</strong>
         </div>
       </div>
 
       <div className="report-summary-grid">
         <div className="report-summary-card">
           <p className="summary-label">Annualized Recurring</p>
-          <p className="summary-value">{summaryStats.annualizedRecurring.toLocaleString(undefined, { maximumFractionDigits: 0 })} SAR</p>
+          <p className="summary-value">{summaryStats.annualizedRecurring.toLocaleString(undefined, { maximumFractionDigits: 0 })} {currency}</p>
           <span className="summary-subvalue">Projected yearly inflow</span>
         </div>
         <div className="report-summary-card accent">
           <p className="summary-label">One-time Boosts</p>
-          <p className="summary-value">{summaryStats.oneTimeValue.toLocaleString(undefined, { maximumFractionDigits: 0 })} SAR</p>
+          <p className="summary-value">{summaryStats.oneTimeValue.toLocaleString(undefined, { maximumFractionDigits: 0 })} {currency}</p>
           <span className="summary-subvalue">{summaryStats.oneTimeCount} scheduled payouts</span>
         </div>
         <div className="report-summary-card">
@@ -126,7 +126,7 @@ function AdditionalIncome({ incomes, onAdd, onDelete }) {
         </div>
         <div className="report-summary-card">
           <p className="summary-label">Recurring Avg.</p>
-          <p className="summary-value accent">{incomes.length ? Math.round(summaryStats.monthlyRecurring / Math.max(1, incomes.length)).toLocaleString() : 0} SAR</p>
+          <p className="summary-value accent">{incomes.length ? Math.round(summaryStats.monthlyRecurring / Math.max(1, incomes.length)).toLocaleString() : 0} {currency}</p>
           <span className="summary-subvalue">Per active stream</span>
         </div>
       </div>
@@ -135,7 +135,7 @@ function AdditionalIncome({ incomes, onAdd, onDelete }) {
         <div>
           <p className="insight-title">Income Outlook</p>
           <p className="insight-copy">
-            Recurring sources currently provide <span className="insight-highlight">{summaryStats.monthlyRecurring.toLocaleString(undefined, { maximumFractionDigits: 0 })} SAR</span> per month.
+            Recurring sources currently provide <span className="insight-highlight">{summaryStats.monthlyRecurring.toLocaleString(undefined, { maximumFractionDigits: 0 })} {currency}</span> per month.
             {nextOneTimeIncome ? (
               <> Next one-time boost arrives in <span className="insight-highlight">{nextOneTimeIncome.label}</span>.</>
             ) : (
@@ -147,7 +147,7 @@ function AdditionalIncome({ incomes, onAdd, onDelete }) {
           <div className="insight-metric">
             <span>Top Stream</span>
             <strong>{topIncomeStream.name}</strong>
-            <small>{parseFloat(topIncomeStream.amount).toLocaleString()} SAR {topIncomeStream.frequency.toLowerCase()}</small>
+            <small>{parseFloat(topIncomeStream.amount).toLocaleString()} {currency} {topIncomeStream.frequency.toLowerCase()}</small>
           </div>
         )}
       </div>
@@ -274,12 +274,12 @@ function AdditionalIncome({ incomes, onAdd, onDelete }) {
                     <div className="income-details-row">
                       <div>
                         <p className="detail-label">Face Value</p>
-                        <p className="detail-value">{parseFloat(income.amount).toLocaleString()} SAR</p>
+                        <p className="detail-value">{parseFloat(income.amount).toLocaleString()} {currency}</p>
                       </div>
                       {!isOneTime && (
                         <div>
                           <p className="detail-label">Monthly Equivalent</p>
-                          <p className="detail-value positive">{monthlyEquivalent.toLocaleString()} SAR</p>
+                          <p className="detail-value positive">{monthlyEquivalent.toLocaleString()} {currency}</p>
                         </div>
                       )}
                       {isOneTime && (
@@ -292,7 +292,7 @@ function AdditionalIncome({ incomes, onAdd, onDelete }) {
                   </div>
                   <div className="card-actions">
                     {!isOneTime && (
-                      <span className="recurring-pill">≈ {(monthlyEquivalent * 12).toLocaleString()} SAR/yr</span>
+                      <span className="recurring-pill">≈ {(monthlyEquivalent * 12).toLocaleString()} {currency}/yr</span>
                     )}
                     <button 
                       className="btn btn-danger"
@@ -305,7 +305,7 @@ function AdditionalIncome({ incomes, onAdd, onDelete }) {
               );
             })}
             <div className="module-highlight positive">
-              Total Additional Income: {summaryStats.monthlyRecurring.toLocaleString()} SAR / month
+              Total Additional Income: {summaryStats.monthlyRecurring.toLocaleString()} {currency} / month
             </div>
           </>
         ) : (
