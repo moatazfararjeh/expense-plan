@@ -5,14 +5,14 @@ const ThemeContext = createContext();
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState('dark'); // Default theme
+  const [theme] = useState('light'); // Light mode only
 
   useEffect(() => {
-    document.body.setAttribute('data-theme', theme);
-  }, [theme]);
+    document.body.setAttribute('data-theme', 'light');
+  }, []);
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
+    // Dark mode coming soon — no-op
   };
 
   return (

@@ -108,7 +108,7 @@ app.get('/api/settings', authenticateToken, async (req, res) => {
         opening_balance: 0,
         plan_start_date: new Date().toISOString().split('T')[0],
         currency: 'SAR',
-        categories: ['Jordan Family Expense', 'Our Expense', 'Loan Sabb', 'Other']
+        categories: ['Family Expense', 'My Expense', 'Loan', 'Other']
       });
     }
   } catch (error) {
@@ -438,7 +438,7 @@ app.get('/api/additional-income', authenticateToken, async (req, res) => {
 
 // Add additional income
 app.post('/api/additional-income', authenticateToken, async (req, res) => {
-  const { name, amount, frequency, category, income_month } = req.body;
+  const { name, amount, frequency, category, income_month, income_year } = req.body;
   
   try {
     // Encrypt amount before storing
@@ -452,7 +452,8 @@ app.post('/api/additional-income', authenticateToken, async (req, res) => {
         amount: encryptedAmount,
         frequency: frequency || 'Monthly',
         category: category || 'Other',
-        income_month: income_month || null
+        income_month: income_month || null,
+        income_year: income_year || null
       }])
       .select()
       .single();

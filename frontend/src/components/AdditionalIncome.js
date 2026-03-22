@@ -8,6 +8,7 @@ function AdditionalIncome({ incomes, onAdd, onDelete }) {
   const [frequency, setFrequency] = useState('Monthly');
   const [category, setCategory] = useState('Freelance');
   const [incomeMonth, setIncomeMonth] = useState('1'); // For one-time income
+  const [incomeYear, setIncomeYear] = useState(String(new Date().getFullYear())); // For one-time income
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -19,9 +20,10 @@ function AdditionalIncome({ incomes, onAdd, onDelete }) {
         category
       };
       
-      // Add income_month only for one-time income
+      // Add income_month and income_year only for one-time income
       if (frequency === 'One-time') {
         incomeData.income_month = parseInt(incomeMonth);
+        incomeData.income_year = parseInt(incomeYear);
       }
       
       onAdd(incomeData);
@@ -30,6 +32,7 @@ function AdditionalIncome({ incomes, onAdd, onDelete }) {
       setFrequency('Monthly');
       setCategory('Freelance');
       setIncomeMonth('1');
+      setIncomeYear(String(new Date().getFullYear()));
     } else {
       alert('Please fill in all fields correctly');
     }
@@ -187,7 +190,7 @@ function AdditionalIncome({ incomes, onAdd, onDelete }) {
           </select>
         </div>
         
-        {/* Show month selector only for one-time income */}
+        {/* Show month and year selectors only for one-time income */}
         {frequency === 'One-time' && (
           <div className="form-group">
             <label htmlFor="income-month">Which Month? (أي شهر؟)</label>
@@ -208,6 +211,20 @@ function AdditionalIncome({ incomes, onAdd, onDelete }) {
               <option value="10">October (أكتوبر)</option>
               <option value="11">November (نوفمبر)</option>
               <option value="12">December (ديسمبر)</option>
+            </select>
+          </div>
+        )}
+        {frequency === 'One-time' && (
+          <div className="form-group">
+            <label htmlFor="income-year">Which Year? (أي سنة؟)</label>
+            <select
+              id="income-year"
+              value={incomeYear}
+              onChange={(e) => setIncomeYear(e.target.value)}
+            >
+              {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 1 + i).map(yr => (
+                <option key={yr} value={String(yr)}>{yr}</option>
+              ))}
             </select>
           </div>
         )}
@@ -248,7 +265,7 @@ function AdditionalIncome({ incomes, onAdd, onDelete }) {
                         <div className="income-meta">
                           <span className={`frequency-pill ${isOneTime ? 'one-time' : 'recurring'}`}>
                             {income.frequency}
-                            {isOneTime && income.income_month && ` · ${monthNames[income.income_month - 1]}`}
+                            {isOneTime && income.income_month && ` · ${monthNames[income.income_month - 1]}${income.income_year ? ` ${income.income_year}` : ''}`}
                           </span>
                           <span className="category-chip">{income.category}</span>
                         </div>
@@ -268,7 +285,7 @@ function AdditionalIncome({ incomes, onAdd, onDelete }) {
                       {isOneTime && (
                         <div>
                           <p className="detail-label">Applies To</p>
-                          <p className="detail-value warning">{income.income_month ? monthNames[income.income_month - 1] : 'Selected month'}</p>
+                          <p className="detail-value warning">{income.income_month ? `${monthNames[income.income_month - 1]}${income.income_year ? ` ${income.income_year}` : ''}` : 'Selected month'}</p>
                         </div>
                       )}
                     </div>

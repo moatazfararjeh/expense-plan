@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 
-function DailyTransactions({ transactions, onAdd, onDelete, categories = ['Jordan Family Expense', 'Our Expense', 'Loan Sabb', 'Other'], currency = 'SAR' }) {
+function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Family Expense', 'My Expense', 'Loan', 'Other'], currency = 'SAR' }) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);

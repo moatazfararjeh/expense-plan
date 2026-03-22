@@ -40,7 +40,7 @@ const Settings = ({ salary = 0, openingBalance = 0, planStartDate = '', onUpdate
       
       if (response.data) {
         setCurrency(response.data.currency || 'SAR');
-        setCategories(response.data.categories || ['Jordan Family Expense', 'Our Expense', 'Loan Sabb', 'Other']);
+        setCategories(response.data.categories || ['Family Expense', 'My Expense', 'Loan', 'Other']);
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -139,37 +139,37 @@ const Settings = ({ salary = 0, openingBalance = 0, planStartDate = '', onUpdate
   };
 
   return (
-    <div className="monthly-expense-report">
-      <div className="report-header">
+    <div className="settings-page">
+
+      {/* ── Header ── */}
+      <div className="settings-page-header">
         <div>
           <h2>⚙️ Settings</h2>
-          <p className="report-subtitle">Configure your application and financial parameters</p>
+          <p className="settings-page-subtitle">Configure your application and financial parameters</p>
         </div>
-        <button 
-          onClick={() => window.location.href = '/'}
-          className="btn-home"
-        >
-          <span style={{ fontSize: '1.2rem' }}>🏠</span> 
-          <span>Home</span>
-        </button>
       </div>
-      
+
+      {/* ── Toast ── */}
       {message && (
-        <div className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
-          {message}
+        <div className={`settings-toast ${message.includes('Error') ? 'error' : 'success'}`}>
+          {message.includes('Error') ? '✕' : '✓'} {message}
         </div>
       )}
 
-      <div className="settings-section">
-        <h3>💼 Salary & Plan Settings</h3>
-        <p className="section-description">
+      {/* ── 1. Salary & Plan ── */}
+      <div className="s-card">
+        <div className="s-card-header">
+          <h3 className="s-card-title">💼 Salary &amp; Plan Settings</h3>
+        </div>
+        <p className="s-card-desc">
           Configure your monthly salary, opening balance, and plan start date.
         </p>
-        
-        <form onSubmit={handleSalaryUpdate} className="glass-form">
-          <div className="form-group">
-            <label>Monthly Salary:</label>
+
+        <form onSubmit={handleSalaryUpdate}>
+          <div className="s-form-group">
+            <label className="s-label">Monthly Salary</label>
             <input
+              className="s-input"
               type="number"
               value={salaryInput}
               onChange={(e) => setSalaryInput(e.target.value)}
@@ -178,10 +178,11 @@ const Settings = ({ salary = 0, openingBalance = 0, planStartDate = '', onUpdate
               min="0"
             />
           </div>
-          
-          <div className="form-group">
-            <label>Opening Balance :</label>
+
+          <div className="s-form-group">
+            <label className="s-label">Opening Balance</label>
             <input
+              className="s-input"
               type="number"
               value={balanceInput}
               onChange={(e) => setBalanceInput(e.target.value)}
@@ -189,236 +190,237 @@ const Settings = ({ salary = 0, openingBalance = 0, planStartDate = '', onUpdate
               step="0.01"
               min="0"
             />
-            <small className="help-text">
-              The amount you have before starting the plan
-            </small>
+            <span className="s-help">The amount you have before starting the plan</span>
           </div>
-          
-          <div className="form-group">
-            <label>Plan Start Date :</label>
-            <div 
-              className="date-input-wrapper" 
+
+          <div className="s-form-group">
+            <label className="s-label">Plan Start Date</label>
+            <div
+              className="s-date-wrapper"
               onClick={() => document.getElementById('planStartDateInput').showPicker?.()}
             >
-              <span className="date-icon">
-                📅
-              </span>
               <input
                 id="planStartDateInput"
                 type="date"
+                className="s-date-field"
                 value={startDateInput}
                 onChange={(e) => setStartDateInput(e.target.value)}
-                className="date-input-field"
               />
+              <span className="s-date-icon">📅</span>
             </div>
-            <small className="help-text">
-              Start date for tracking expenses and savings
-            </small>
+            <span className="s-help">Start date for tracking expenses and savings</span>
           </div>
-          
-          <button type="submit" className="btn-add" style={{ marginTop: '10px' }}>
+
+          <button type="submit" className="s-btn-primary full-width">
             Update Salary Settings
           </button>
         </form>
 
         {salary > 0 && (
-          <div className="current-info-box">
-            <div className="info-item">
-              Current Salary: <strong>{salary.toLocaleString()} {currency}</strong>
+          <div className="s-info-box">
+            <div className="s-info-item">
+              <span className="s-info-label">Current Salary</span>
+              <span className="s-info-value">{salary.toLocaleString()} {currency}</span>
             </div>
             {openingBalance > 0 && (
-              <div className="info-item">
-                Opening Balance: <strong>{openingBalance.toLocaleString()} {currency}</strong>
+              <div className="s-info-item">
+                <span className="s-info-label">Opening Balance</span>
+                <span className="s-info-value">{openingBalance.toLocaleString()} {currency}</span>
               </div>
             )}
             {planStartDate && (
-              <div className="info-item">
-                📅 Plan Start: <strong>{new Date(planStartDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</strong>
+              <div className="s-info-item">
+                <span className="s-info-label">Plan Start</span>
+                <span className="s-info-value">
+                  {new Date(planStartDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                </span>
               </div>
             )}
           </div>
         )}
       </div>
 
-      <div className="settings-section">
-        <div className="section-header">
-          <h3>📈 Salary Changes</h3>
-          <button 
+      {/* ── 2. Salary Changes ── */}
+      <div className="s-card">
+        <div className="s-card-header">
+          <h3 className="s-card-title">📈 Salary Changes</h3>
+          <button
+            type="button"
             onClick={() => setShowSalaryChangeForm(!showSalaryChangeForm)}
-            className="btn btn-primary"
+            className={showSalaryChangeForm ? 's-btn-outline cancel' : 's-btn-primary'}
           >
             {showSalaryChangeForm ? 'Cancel' : '+ Add Change'}
           </button>
         </div>
-        <p className="section-description">
+        <p className="s-card-desc">
           Track salary changes over time. These will be automatically applied in projections based on the effective date.
         </p>
-        
+
         {showSalaryChangeForm && (
-          <form onSubmit={handleAddSalaryChange} className="glass-form">
-            <div className="form-group">
-              <label>New Salary Amount:</label>
-              <input
-                type="number"
-                value={changeAmount}
-                onChange={(e) => setChangeAmount(e.target.value)}
-                placeholder="e.g., 35000"
-                step="0.01"
-                min="0"
-              />
-            </div>
-            <div className="form-group">
-              <label>Effective Date (تاريخ التطبيق):</label>
-              <div 
-                className="date-input-wrapper" 
-                onClick={() => document.getElementById('effectiveDateInput').showPicker?.()}
-              >
-                <span className="date-icon">
-                  📅
-                </span>
+          <div className="s-inline-form">
+            <form onSubmit={handleAddSalaryChange}>
+              <div className="s-form-group">
+                <label className="s-label">New Salary Amount</label>
                 <input
-                  id="effectiveDateInput"
-                  type="date"
-                  value={effectiveDate}
-                  onChange={(e) => setEffectiveDate(e.target.value)}
-                  className="date-input-field"
+                  className="s-input"
+                  type="number"
+                  value={changeAmount}
+                  onChange={(e) => setChangeAmount(e.target.value)}
+                  placeholder="e.g., 35000"
+                  step="0.01"
+                  min="0"
                 />
               </div>
-            </div>
-            <div className="form-group">
-              <label>Notes (Optional):</label>
-              <input
-                type="text"
-                value={changeNotes}
-                onChange={(e) => setChangeNotes(e.target.value)}
-                placeholder="e.g., Annual raise, Promotion"
-              />
-            </div>
-            <button type="submit" className="btn-add">
-              Add Salary Change
-            </button>
-          </form>
+              <div className="s-form-group">
+                <label className="s-label">Effective Date</label>
+                <div
+                  className="s-date-wrapper"
+                  onClick={() => document.getElementById('effectiveDateInput').showPicker?.()}
+                >
+                  <input
+                    id="effectiveDateInput"
+                    type="date"
+                    className="s-date-field"
+                    value={effectiveDate}
+                    onChange={(e) => setEffectiveDate(e.target.value)}
+                  />
+                  <span className="s-date-icon">📅</span>
+                </div>
+              </div>
+              <div className="s-form-group">
+                <label className="s-label">Notes <span style={{ fontWeight: 400, color: '#94a3b8' }}>(optional)</span></label>
+                <input
+                  className="s-input"
+                  type="text"
+                  value={changeNotes}
+                  onChange={(e) => setChangeNotes(e.target.value)}
+                  placeholder="e.g., Annual raise, Promotion"
+                />
+              </div>
+              <button type="submit" className="s-btn-primary full-width">
+                Add Salary Change
+              </button>
+            </form>
+          </div>
         )}
 
-        <div className="salary-changes-list">
-          {salaryChanges.length > 0 ? (
-            <>
-              <div className="list-summary">
-                {salaryChanges.length} salary change{salaryChanges.length !== 1 ? 's' : ''} recorded
-              </div>
+        {salaryChanges.length > 0 ? (
+          <>
+            <p className="s-list-summary">{salaryChanges.length} change{salaryChanges.length !== 1 ? 's' : ''} recorded</p>
+            <div className="s-change-list">
               {salaryChanges.map((change) => (
-                <div key={change.id} className="list-item-card">
-                  <div className="item-details">
-                    <div className="item-amount">
-                      {parseFloat(change.amount).toLocaleString()} {currency}
-                    </div>
-                    <div className="item-date">
-                      📅 Effective: {formatDate(change.effective_date)}
-                    </div>
-                    {change.notes && (
-                      <div className="item-notes">
-                        {change.notes}
-                      </div>
-                    )}
+                <div key={change.id} className="s-change-card">
+                  <div className="s-change-info">
+                    <div className="s-change-amount">{parseFloat(change.amount).toLocaleString()} {currency}</div>
+                    <div className="s-change-date">📅 Effective: {formatDate(change.effective_date)}</div>
+                    {change.notes && <div className="s-change-notes">{change.notes}</div>}
                   </div>
-                  <button 
-                    className="btn-icon btn-delete"
-                    onClick={() => onDeleteSalaryChange(change.id)}
-                  >
+                  <button className="s-btn-danger" onClick={() => onDeleteSalaryChange(change.id)}>
                     Delete
                   </button>
                 </div>
               ))}
-            </>
-          ) : (
-            <div className="empty-state">
-              No salary changes recorded yet. Current salary will be used for all months.
             </div>
-          )}
-        </div>
-
-        {salaryChanges.length > 0 && (
-          <div className="info-tip">
-            <strong>💡 Tip:</strong> Salary changes will be automatically applied in the monthly projection based on the effective date.
-          </div>
+            <div className="s-tip">
+              💡 Salary changes are automatically applied in monthly projections based on the effective date.
+            </div>
+          </>
+        ) : (
+          <div className="s-empty">No salary changes recorded yet. Current salary will be used for all months.</div>
         )}
       </div>
 
-      <div className="settings-section">
-        <h3>Currency</h3>
-        <div className="form-group">
-          <label>Currency Symbol/Code:</label>
-          <input
-            type="text"
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-            placeholder="e.g., SAR, USD, EUR, £, ¥"
-            maxLength={10}
-          />
-          <small className="help-text">
-            This will be displayed with all amounts throughout the application
-          </small>
+      {/* ── 3. Currency ── */}
+      <div className="s-card">
+        <div className="s-card-header">
+          <h3 className="s-card-title">💱 Currency</h3>
+        </div>
+        <p className="s-card-desc">
+          Set the currency symbol or code displayed with all amounts across the app.
+        </p>
+        <div className="s-currency-row">
+          <div className="s-currency-group">
+            <label className="s-label">Currency Symbol / Code</label>
+            <input
+              className="s-input"
+              type="text"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              placeholder="e.g., SAR, USD, EUR, £, ¥"
+              maxLength={10}
+            />
+            <span className="s-help">Shown next to every monetary value in the app</span>
+          </div>
+          {currency && (
+            <div>
+              <div className="s-label" style={{ visibility: 'hidden' }}>preview</div>
+              <div className="s-currency-preview">{currency}</div>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="settings-section">
-        <h3>Expense Categories</h3>
-        <p className="section-description">
-          Manage your custom expense categories. These will be available for monthly expenses and daily transactions.
+      {/* ── 4. Expense Categories ── */}
+      <div className="s-card">
+        <div className="s-card-header">
+          <h3 className="s-card-title">🏷️ Expense Categories</h3>
+          <span className="s-badge">{categories.length} {categories.length === 1 ? 'category' : 'categories'}</span>
+        </div>
+        <p className="s-card-desc">
+          Manage your custom expense categories. These will be available when adding monthly expenses and daily transactions.
         </p>
-        
-        <div className="categories-list">
+
+        <div className="s-category-list">
+          {categories.length === 0 && (
+            <div className="s-empty">No categories yet — add your first one below.</div>
+          )}
           {categories.map((category, index) => (
-            <div key={index} className="category-item">
-              <span className="category-name">{category}</span>
-              <div className="category-actions">
-                <button 
-                  onClick={() => moveCategory(index, 'up')} 
+            <div key={index} className="s-category-card">
+              <span className="s-cat-index">{index + 1}</span>
+              <span className="s-cat-label">{category}</span>
+              <div className="s-cat-actions">
+                <button
+                  onClick={() => moveCategory(index, 'up')}
                   disabled={index === 0}
-                  className="btn-icon"
+                  className="s-cat-btn move"
                   title="Move up"
-                >
-                  ▲
-                </button>
-                <button 
-                  onClick={() => moveCategory(index, 'down')} 
+                >↑</button>
+                <button
+                  onClick={() => moveCategory(index, 'down')}
                   disabled={index === categories.length - 1}
-                  className="btn-icon"
+                  className="s-cat-btn move"
                   title="Move down"
-                >
-                  ▼
-                </button>
-                <button 
+                >↓</button>
+                <button
                   onClick={() => removeCategory(index)}
-                  className="btn-icon btn-delete"
+                  className="s-cat-btn del"
                   title="Remove"
-                >
-                  ✕
-                </button>
+                >✕</button>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="add-category">
+        <div className="s-cat-add-row">
           <input
             type="text"
+            className="s-cat-input"
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && addCategory()}
-            placeholder="Add new category"
+            placeholder="Type a new category name…"
           />
-          <button onClick={addCategory} className="btn-add">
-            Add Category
-          </button>
+          <button onClick={addCategory} className="s-btn-primary">+ Add</button>
         </div>
       </div>
 
-      <div className="settings-actions">
-        <button onClick={saveSettings} className="btn-save">
-          Save Settings
+      {/* ── Save bar ── */}
+      <div className="s-actions-bar">
+        <button onClick={saveSettings} className="s-save-btn">
+          💾 Save All Settings
         </button>
       </div>
+
     </div>
   );
 };

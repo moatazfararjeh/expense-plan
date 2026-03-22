@@ -26,7 +26,7 @@ function App() {
   const [openingBalance, setOpeningBalance] = useState(0);
   const [planStartDate, setPlanStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [currency, setCurrency] = useState('SAR');
-  const [categories, setCategories] = useState(['Jordan Family Expense', 'Our Expense', 'Loan Sabb', 'Other']);
+  const [categories, setCategories] = useState(['Family Expense', 'My Expense', 'Loan', 'Other']);
   const [salaryChanges, setSalaryChanges] = useState([]);
   const [additionalIncomes, setAdditionalIncomes] = useState([]);
   const [monthlyExpenses, setMonthlyExpenses] = useState([]);
@@ -55,7 +55,7 @@ function App() {
       setOpeningBalance(settingsRes.data.opening_balance || 0);
       setPlanStartDate(settingsRes.data.plan_start_date || new Date().toISOString().split('T')[0]);
       setCurrency(settingsRes.data.currency || 'SAR');
-      setCategories(settingsRes.data.categories || ['Jordan Family Expense', 'Our Expense', 'Loan Sabb', 'Other']);
+      setCategories(settingsRes.data.categories || ['Family Expense', 'My Expense', 'Loan', 'Other']);
       setSalaryChanges(salaryChangesRes.data);
       setAdditionalIncomes(incomesRes.data);
       setMonthlyExpenses(expensesRes.data);

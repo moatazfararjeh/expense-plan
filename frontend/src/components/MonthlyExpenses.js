@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 
-function MonthlyExpenses({ expenses, onAdd, onUpdate, onDelete, categories = ['Jordan Family Expense', 'Our Expense', 'Loan Sabb', 'Other'], currency = 'SAR' }) {
+function MonthlyExpenses({ expenses, onAdd, onUpdate, onDelete, categories = ['Family Expense', 'My Expense', 'Loan', 'Other'], currency = 'SAR' }) {
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState(categories[0] || 'Other');
@@ -179,9 +179,9 @@ function MonthlyExpenses({ expenses, onAdd, onUpdate, onDelete, categories = ['J
   // Category icons and colors
   const getCategoryIcon = (category) => {
     const icons = {
-      'Jordan Family Expense': '👨‍👩‍👧‍👦',
-      'Our Expense': '🏠',
-      'Loan Sabb': '🏦',
+      'Family Expense': '👨‍👩‍👧‍👦',
+      'My Expense': '🏠',
+      'Loan': '🏦',
       'Other': '📦'
     };
     return icons[category] || '💰';
@@ -189,9 +189,9 @@ function MonthlyExpenses({ expenses, onAdd, onUpdate, onDelete, categories = ['J
 
   const getCategoryColor = (category) => {
     const colors = {
-      'Jordan Family Expense': '#FF6B6B',
-      'Our Expense': '#4ECDC4',
-      'Loan Sabb': '#FFD93D',
+      'Family Expense': '#FF6B6B',
+      'My Expense': '#4ECDC4',
+      'Loan': '#FFD93D',
       'Other': '#95E1D3'
     };
     return colors[category] || '#A8DADC';

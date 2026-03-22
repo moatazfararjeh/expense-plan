@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const pool = require('../db');
+const supabase = require('../supabase');
 const { unwrapDEK } = require('../encryption');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
@@ -43,16 +43,17 @@ const authenticateWithDEK = async (req, res, next) => {
     req.user = user;
 
     // Get wrapped DEK from database
-    const result = await pool.query(
-      'SELECT encryption_key_wrapped, email FROM users WHERE id = $1',
-      [user.id]
-    );
+    const { data: userRow, error: dbError } = await supabase
+      .from('users')
+      .select('encryption_key_wrapped, email')
+      .eq('id', user.id)
+      .single();
 
-    if (result.rows.length === 0) {
+    if (dbError || !userRow) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const { encryption_key_wrapped, email } = result.rows[0];
+    const { encryption_key_wrapped, email } = userRow;
 
     if (!encryption_key_wrapped) {
       // User doesn't have DEK (old user) - use master key
