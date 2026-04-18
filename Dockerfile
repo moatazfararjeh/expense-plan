@@ -7,13 +7,14 @@ WORKDIR /app/frontend
 # Increase memory limit and disable CI mode for build
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV CI=false
+ENV GENERATE_SOURCEMAP=false
 
 # Accept API URL as build argument
 ARG REACT_APP_API_URL=https://expense.ardalsharq.com
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
 COPY frontend/package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps --no-audit --no-fund
 COPY frontend/ ./
 RUN npm run build
 
