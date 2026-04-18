@@ -290,7 +290,7 @@ body {
     text-align: left !important;
   }
 
-  /* Month cell - special styling as header */
+  /* Month cell - card title, no label prefix needed */
   .monthly-table .month-cell {
     font-size: 1.15rem !important;
     font-weight: 700 !important;
@@ -301,12 +301,16 @@ body {
     justify-content: center !important;
   }
 
+  .monthly-table .month-cell::before {
+    display: none !important;
+  }
+
   /* Amount cells */
   .monthly-table .amount-cell {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace !important;
-    font-size: 1.1rem !important;
+    font-size: 1rem !important;
     font-weight: 600 !important;
-    justify-content: center !important;
+    justify-content: space-between !important;
     padding: 0.5rem 0 !important;
   }
 
@@ -329,18 +333,22 @@ body {
 
   .monthly-table tfoot td {
     color: white !important;
-    font-size: 1.15rem !important;
+    font-size: 1rem !important;
     font-weight: 700 !important;
     padding: 0.5rem 0 !important;
-    justify-content: center !important;
+    justify-content: space-between !important;
   }
 
   .monthly-table tfoot td:first-child {
-    font-size: 1.25rem !important;
+    font-size: 1.15rem !important;
     margin-bottom: 0.75rem !important;
     padding-bottom: 0.75rem !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
     justify-content: center !important;
+  }
+
+  .monthly-table tfoot td:first-child::before {
+    display: none !important;
   }
 
   /* Remove scroll hint */
