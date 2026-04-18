@@ -286,7 +286,8 @@ body {
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
     font-size: 0.75rem !important;
-    flex: 1;
+    flex: 0 0 auto;
+    max-width: 55%;
     text-align: left !important;
   }
 
