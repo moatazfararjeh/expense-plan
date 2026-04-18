@@ -32,7 +32,6 @@ function App() {
   const [monthlyExpenses, setMonthlyExpenses] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [salaryVisible, setSalaryVisible] = useState(true); // Toggle salary visibility
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [showSetupRequired, setShowSetupRequired] = useState(false);
   const [isSetupComplete, setIsSetupComplete] = useState(false);
@@ -517,8 +516,6 @@ function App() {
               salaryChanges={salaryChanges}
               additionalIncomes={additionalIncomes}
               currency={currency}
-              salaryVisible={salaryVisible}
-              toggleSalaryVisibility={() => setSalaryVisible(!salaryVisible)}
               openingBalance={openingBalance}
               planStartDate={planStartDate}
             />

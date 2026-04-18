@@ -48,7 +48,6 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    console.log('CORS blocked origin:', origin);
     return callback(new Error('Not allowed by CORS'));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -671,7 +670,5 @@ module.exports = app;
 
 // Start HTTP server only if this file is run directly
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
+  app.listen(PORT);
 }

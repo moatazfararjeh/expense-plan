@@ -14,15 +14,6 @@ function MonthlyProjection({ salary, openingBalance = 0, planStartDate, salaryCh
   const planStartYear = startDate.getFullYear();
   const planStartMonth = startDate.getMonth() + 1; // 1-12
   
-  console.log('MonthlyProjection Props:', {
-    salary: numericSalary,
-    openingBalance: numericOpeningBalance,
-    planStartDate,
-    startDate,
-    monthlyExpensesCount: monthlyExpenses.length,
-    transactionsCount: transactions.length
-  });
-  
   // Helper function to get salary for a specific month
   const getSalaryForMonth = (year, month) => {
     if (salaryChanges.length === 0) {
@@ -193,31 +184,8 @@ function MonthlyProjection({ salary, openingBalance = 0, planStartDate, salaryCh
     const monthTotalExpenses = monthRecurringExpenses + monthDailyExpenses;
     const monthNet = monthTotalIncome - monthTotalExpenses;
     
-    // Debug logging for March 2026
-    if (actualMonth === 3 && actualYear === 2026) {
-      console.log('March 2026 Calculation:', {
-        monthName,
-        monthSalary,
-        monthAdditionalIncome,
-        monthTotalIncome,
-        monthRecurringExpenses,
-        monthDailyExpenses,
-        monthTotalExpenses,
-        monthNet
-      });
-    }
-    
     // Calculate cumulative savings up to this month (including opening balance)
     let cumulativeSavings = numericOpeningBalance;
-    
-    // Debug for March 2026
-    if (actualMonth === 3 && actualYear === 2026) {
-      console.log('Starting Cumulative Calculation for March 2026:', {
-        openingBalance: numericOpeningBalance,
-        index,
-        startMonth: `${startDate.getMonth() + 1}/${startDate.getFullYear()}`
-      });
-    }
     
     for (let i = 0; i <= index; i++) {
       const iDate = new Date(startDate);
@@ -233,31 +201,11 @@ function MonthlyProjection({ salary, openingBalance = 0, planStartDate, salaryCh
       const iMonthNet = iMonthIncome - iMonthExpenses - iMonthDailyExpenses;
       cumulativeSavings += iMonthNet;
       
-      // Debug logging for cumulative calculation
-      if (actualMonth === 3 && actualYear === 2026) {
-        console.log(`Cumulative Month ${i}:`, {
-          month: `${iMonth}/${iYear}`,
-          income: iMonthIncome,
-          expenses: iMonthExpenses,
-          dailyExpenses: iMonthDailyExpenses,
-          net: iMonthNet,
-          runningTotal: cumulativeSavings
-        });
-      }
     }
     
     // Determine if month is past, current, or future relative to today
     const isPast = actualDate < currentDate && actualDate.getMonth() !== currentDate.getMonth();
     const isCurrent = actualDate.getMonth() === currentDate.getMonth() && actualDate.getFullYear() === currentDate.getFullYear();
-    
-    // Debug final values for March 2026
-    if (actualMonth === 3 && actualYear === 2026) {
-      console.log('Final March 2026 Data:', {
-        cumulativeSavings,
-        monthNet,
-        openingBalance: numericOpeningBalance
-      });
-    }
     
     return {
       month: monthName.substring(0, 3), // Short month name

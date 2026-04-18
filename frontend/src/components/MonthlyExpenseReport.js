@@ -9,8 +9,7 @@ function MonthlyExpenseReport({
   salaryChanges,
   additionalIncomes = [],
   currency = 'SAR',
-  salaryVisible = true,
-  toggleSalaryVisibility,
+
   openingBalance = 0,
   planStartDate
 }) {
@@ -168,9 +167,7 @@ function MonthlyExpenseReport({
     return total;
   };
 
-  const formatSalary = (amount) => {
-    return salaryVisible ? amount.toLocaleString() : '••••••';
-  };
+  const formatSalary = (amount) => amount.toLocaleString();
 
   // Calculate percentage of salary
   const calculatePercentage = (amount, salary) => {
@@ -397,7 +394,7 @@ function MonthlyExpenseReport({
       if (allItems.length === 0) {
         const emptyRow = ws2.addRow([
           monthData.date, 'No expenses', '0.00', '-', '0.00',
-          `Salary: ${salaryVisible ? currentSalary.toFixed(2) : '******'} ${currency}`
+          `Salary: ${currentSalary.toFixed(2)} ${currency}`
         ]);
         emptyRow.eachCell(cell => styleCell(cell, C.itemBase, 'FF6B7280'));
       } else {
@@ -408,7 +405,7 @@ function MonthlyExpenseReport({
 
           let summaryVal = '';
           if (idx === 0)
-            summaryVal = `Salary: ${salaryVisible ? currentSalary.toFixed(2) : '******'} ${currency}`;
+            summaryVal = `Salary: ${currentSalary.toFixed(2)} ${currency}`;
           else if (idx === 1 && expMonthAdditional > 0)
             summaryVal = `Additional Income: +${expMonthAdditional.toFixed(2)} ${currency}`;
           else if (idx === (expMonthAdditional > 0 ? 2 : 1))
@@ -422,7 +419,7 @@ function MonthlyExpenseReport({
             idx === 0 ? monthData.date : '',
             `${isDaily ? '[Daily] ' : ''}${item.cashFor}`,
             parseFloat(item.amount.toFixed(2)),
-            salaryVisible && currentSalary > 0 ? `${pct}%` : '-',
+            currentSalary > 0 ? `${pct}%` : '-',
             idx === 0 ? parseFloat(grandTotal.toFixed(2)) : '',
             summaryVal
           ]);
@@ -431,7 +428,7 @@ function MonthlyExpenseReport({
           // Amount in blue
           exRow.getCell(3).font = { color: { argb: 'FF0284C7' }, bold: true, size: 11, name: 'Calibri' };
           // % column
-          if (salaryVisible && currentSalary > 0) {
+          if (currentSalary > 0) {
             const pctNum = parseFloat(pct);
             const pctClr = pctNum < 30 ? 'FF059669' : pctNum < 60 ? 'FF2563EB' : pctNum < 80 ? 'FFD97706' : 'FFDC2626';
             exRow.getCell(4).font = { color: { argb: pctClr }, bold: true, size: 11, name: 'Calibri' };
@@ -450,9 +447,9 @@ function MonthlyExpenseReport({
       const totalPct = currentSalary > 0 ? calculatePercentage(grandTotal, currentSalary) : '0';
       const totRow = ws2.addRow([
         'Total % of Salary:', '', '',
-        salaryVisible && currentSalary > 0 ? `${totalPct}%` : '-',
+        currentSalary > 0 ? `${totalPct}%` : '-',
         '',
-        salaryVisible && currentSalary > 0
+        currentSalary > 0
           ? `${grandTotal.toLocaleString()} / ${currentSalary.toLocaleString()} ${currency}`
           : ''
       ]);
@@ -490,33 +487,7 @@ function MonthlyExpenseReport({
             <span className="export-icon">📊</span>
             <span>Export Excel</span>
           </button>
-          {toggleSalaryVisibility && (
-            <button 
-              onClick={toggleSalaryVisibility}
-              className="salary-toggle-btn"
-              title={salaryVisible ? 'Hide Salary' : 'Show Salary'}
-              style={{
-                background: 'var(--primary-gradient)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                borderRadius: '999px',
-                padding: '10px 20px',
-                cursor: 'pointer',
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                color: '#fff',
-                boxShadow: '0 8px 24px rgba(5, 19, 39, 0.35)',
-                transition: 'all 0.3s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-              onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
-              onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
-            >
-              <span style={{ fontSize: '1.2rem' }}>{salaryVisible ? '🙈' : '👁️'}</span>
-              <span>{salaryVisible ? 'Hide Salary' : 'Show Salary'}</span>
-            </button>
-          )}
+
         </div>
       </div>
 
@@ -639,7 +610,7 @@ function MonthlyExpenseReport({
                       </span>
                       <div className="mob-item-right">
                         <span className="mob-item-amount">{item.amount.toLocaleString()} {currency}</span>
-                        {salaryVisible && monthTotalIncome > 0 && (
+                        {monthTotalIncome > 0 && (
                           <span className="mob-item-pct" style={{ color: getPercentageColor(calculatePercentage(item.amount, monthTotalIncome)) }}>
                             {calculatePercentage(item.amount, monthTotalIncome)}%
                           </span>
@@ -665,7 +636,7 @@ function MonthlyExpenseReport({
                   <span>Total Spent</span>
                   <span>{grandTotal.toLocaleString()} {currency}</span>
                 </div>
-                {salaryVisible && monthTotalIncome > 0 && (
+                {monthTotalIncome > 0 && (
                   <div className="mob-summary-row mob-utilization-row">
                     <span>📊 % of Income</span>
                     <span style={{ color: getPercentageColor(calculatePercentage(grandTotal, monthTotalIncome)), fontWeight: 700 }}>
@@ -733,7 +704,7 @@ function MonthlyExpenseReport({
                       </td>
                       <td className="expense-amount">{allItems[0].amount.toLocaleString()}</td>
                       <td className="percentage-cell">
-                        {salaryVisible && monthTotalIncome > 0 && (
+                        {monthTotalIncome > 0 && (
                           <span style={{ color: getPercentageColor(calculatePercentage(allItems[0].amount, monthTotalIncome)), fontWeight: 'bold' }}>
                             {calculatePercentage(allItems[0].amount, monthTotalIncome)}%
                           </span>
@@ -757,7 +728,7 @@ function MonthlyExpenseReport({
                         </td>
                         <td className="expense-amount">{item.amount.toLocaleString()}</td>
                         <td className="percentage-cell">
-                          {salaryVisible && monthTotalIncome > 0 && (
+                          {monthTotalIncome > 0 && (
                             <span style={{ color: getPercentageColor(calculatePercentage(item.amount, monthTotalIncome)), fontWeight: 'bold' }}>
                               {calculatePercentage(item.amount, monthTotalIncome)}%
                             </span>
@@ -822,7 +793,7 @@ function MonthlyExpenseReport({
                     📊 Total % of Income
                   </td>
                   <td className="total-percentage-value">
-                    {salaryVisible && monthTotalIncome > 0 ? (
+                    {monthTotalIncome > 0 ? (
                       <span style={{ 
                         color: getPercentageColor(calculatePercentage(grandTotal, monthTotalIncome)), 
                         fontWeight: 'bold',
@@ -835,7 +806,7 @@ function MonthlyExpenseReport({
                     )}
                   </td>
                   <td colSpan="3" className="total-percentage-info">
-                    {salaryVisible && monthTotalIncome > 0 && (
+                    {monthTotalIncome > 0 && (
                       <span className="percentage-breakdown">
                         {grandTotal.toLocaleString()} / {monthTotalIncome.toLocaleString()} {currency}
                       </span>

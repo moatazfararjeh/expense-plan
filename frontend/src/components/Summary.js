@@ -1,6 +1,6 @@
 import React from 'react';
 
-function Summary({ summary, currency = 'SAR', salaryVisible = true, toggleSalaryVisibility }) {
+function Summary({ summary, currency = 'SAR' }) {
   const {
     monthly_salary = 0,
     additional_monthly_income = 0,
@@ -17,7 +17,6 @@ function Summary({ summary, currency = 'SAR', salaryVisible = true, toggleSalary
   } = summary;
 
   const formatMoney = (value) => `${value.toLocaleString()} ${currency}`;
-  const maskableMoney = (value) => salaryVisible ? formatMoney(value) : '••••••';
   const savingsRate = total_yearly_income > 0 ? (yearly_savings / total_yearly_income) * 100 : 0;
 
   const summaryCards = [
@@ -45,7 +44,7 @@ function Summary({ summary, currency = 'SAR', salaryVisible = true, toggleSalary
   ];
 
   const monthlyMetrics = [
-    { label: 'Monthly Salary', value: maskableMoney(monthly_salary), muted: !salaryVisible },
+    { label: 'Monthly Salary', value: formatMoney(monthly_salary) },
     { label: 'Additional Income', value: `+${formatMoney(additional_monthly_income)}`, positive: additional_monthly_income > 0 },
     { label: 'Total Monthly Income', value: formatMoney(total_monthly_income) },
     { label: 'Recurring Expenses', value: formatMoney(monthly_recurring_expenses) },
@@ -53,7 +52,7 @@ function Summary({ summary, currency = 'SAR', salaryVisible = true, toggleSalary
   ];
 
   const yearlyMetrics = [
-    { label: 'Yearly Salary', value: maskableMoney(yearly_salary), muted: !salaryVisible },
+    { label: 'Yearly Salary', value: formatMoney(yearly_salary) },
     { label: 'Yearly Additional', value: `+${formatMoney(yearly_additional_income)}`, positive: yearly_additional_income > 0 },
     { label: 'Total Yearly Income', value: formatMoney(total_yearly_income) },
     { label: 'Recurring Expenses', value: formatMoney(yearly_recurring_expenses) },
@@ -70,23 +69,12 @@ function Summary({ summary, currency = 'SAR', salaryVisible = true, toggleSalary
           <h2>📊 Financial Summary</h2>
           <p className="section-subtitle">One-year projection across earnings, obligations, and liquidity.</p>
         </div>
-        <div className="header-actions">
-          {toggleSalaryVisibility && (
-            <button 
-              type="button"
-              className="chip-button salary-toggle"
-              onClick={toggleSalaryVisibility}
-              title={salaryVisible ? 'Hide Salary' : 'Show Salary'}
-            >
-              {salaryVisible ? '🙈 Hide Salary' : '👁️ Show Salary'}
-            </button>
-          )}
-          <div className="header-pill">
-            <span>Projected Savings</span>
-            <strong>{formatMoney(yearly_savings)}</strong>
-          </div>
+        <div className="header-pill">
+          <span>Projected Savings</span>
+          <strong>{formatMoney(yearly_savings)}</strong>
         </div>
       </div>
+
 
       <div className="summary-grid">
         {summaryCards.map((card) => (
