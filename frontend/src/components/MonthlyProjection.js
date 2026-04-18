@@ -658,8 +658,7 @@ function MonthlyProjection({ salary, openingBalance = 0, planStartDate, salaryCh
 
         {totalYearlySavings > 0 && (
           <div className="success-message">
-            ✅ <strong>Great Planning!</strong> Based on your current plan, you'll save {formatCurrency(totalYearlySavings)} by the end of the year!
-            <br/>
+            <span>✅ <strong>Great Planning!</strong> Based on your current plan, you'll save {formatCurrency(totalYearlySavings)} by the end of the year!</span>
             <small>Note: Savings vary by month based on when recurring expenses are active.</small>
           </div>
         )}
