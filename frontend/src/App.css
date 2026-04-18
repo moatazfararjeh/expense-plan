@@ -92,6 +92,118 @@ body[data-theme='light'] .monthly-table-container {
   border-color: #e2e8f0;
 }
 
+/* ── Projection mobile/desktop dual-view ── */
+.proj-mobile-cards  { display: none; }
+.proj-desktop-table { display: block; }
+
+@media (max-width: 767px) {
+  .proj-mobile-cards  { display: block; }
+  .proj-desktop-table { display: none; }
+}
+
+.proj-month-card {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.875rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+body[data-theme='light'] .proj-month-card {
+  background: #fff;
+  border-color: #e2e8f0;
+}
+
+.proj-card-current {
+  border: 2px solid #0f4c81;
+  box-shadow: 0 4px 12px rgba(15, 76, 129, 0.2);
+}
+
+.proj-card-footer {
+  background: linear-gradient(135deg, #0f4c81, #12a7d4);
+  border: none;
+  color: #fff;
+}
+
+.proj-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1F2937;
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 2px solid #E5E7EB;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.proj-card-footer .proj-card-title {
+  color: #fff;
+  border-bottom-color: rgba(255,255,255,0.3);
+}
+
+.proj-current-badge {
+  background: #0f4c81;
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.proj-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.proj-card-row:last-child {
+  border-bottom: none;
+}
+
+.proj-card-footer .proj-card-row {
+  border-bottom-color: rgba(255,255,255,0.15);
+}
+
+.proj-card-cumulative {
+  background: #F0F9FF;
+  border-radius: 6px;
+  padding: 0.45rem 0.5rem;
+  margin-top: 0.25rem;
+}
+
+body[data-theme='light'] .proj-card-cumulative {
+  background: #f0f9ff;
+}
+
+.proj-card-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.proj-card-footer .proj-card-label {
+  color: rgba(255,255,255,0.75);
+}
+
+.proj-card-value {
+  font-family: 'Courier New', monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.proj-card-footer .proj-card-value {
+  color: #fff;
+}
+
 body[data-theme='light'] .form-group input,
 body[data-theme='light'] .form-group select,
 body[data-theme='light'] .finance-module .form-group input,

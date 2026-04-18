@@ -372,6 +372,56 @@ function MonthlyProjection({ salary, openingBalance = 0, planStartDate, salaryCh
         {/* Monthly Breakdown Table */}
         <div className="monthly-table-container">
           <h3>Month-by-Month Breakdown</h3>
+
+          {/* ── Mobile card layout ── */}
+          <div className="proj-mobile-cards">
+            {monthlyData.map((data, index) => (
+              <div key={index} className={`proj-month-card ${data.status === 'current' ? 'proj-card-current' : ''}`}>
+                <div className="proj-card-title">
+                  {data.status === 'current' && <span className="proj-current-badge">Current</span>}
+                  {data.fullMonth}
+                </div>
+                <div className="proj-card-row">
+                  <span className="proj-card-label">Income</span>
+                  <span className="proj-card-value">{formatCurrency(data.income)}</span>
+                </div>
+                <div className="proj-card-row">
+                  <span className="proj-card-label">Total Expenses</span>
+                  <span className="proj-card-value">{formatCurrency(data.totalExpenses)}</span>
+                </div>
+                <div className="proj-card-row">
+                  <span className="proj-card-label">Net Savings</span>
+                  <span className={`proj-card-value ${data.netSavings >= 0 ? 'positive-cell' : 'negative-cell'}`}>{formatCurrency(data.netSavings)}</span>
+                </div>
+                <div className="proj-card-row proj-card-cumulative">
+                  <span className="proj-card-label">Cumulative</span>
+                  <span className={`proj-card-value ${data.cumulativeSavings >= 0 ? 'positive-cell' : 'negative-cell'}`}>{formatCurrency(data.cumulativeSavings)}</span>
+                </div>
+              </div>
+            ))}
+            <div className="proj-month-card proj-card-footer">
+              <div className="proj-card-title">Year Total</div>
+              <div className="proj-card-row">
+                <span className="proj-card-label">Total Income</span>
+                <span className="proj-card-value">{formatCurrency(totalYearlyIncome)}</span>
+              </div>
+              <div className="proj-card-row">
+                <span className="proj-card-label">Total Expenses</span>
+                <span className="proj-card-value">{formatCurrency(totalYearlyRecurringExpenses + totalDailyExpenses)}</span>
+              </div>
+              <div className="proj-card-row">
+                <span className="proj-card-label">Net</span>
+                <span className="proj-card-value">{formatCurrency(totalYearlyIncome - (totalYearlyRecurringExpenses + totalDailyExpenses))}</span>
+              </div>
+              <div className="proj-card-row">
+                <span className="proj-card-label">Final Balance</span>
+                <span className="proj-card-value">{formatCurrency(totalYearlySavings)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Desktop table layout ── */}
+          <div className="proj-desktop-table">
           <div className="monthly-table">
             <table>
               <thead>
@@ -424,6 +474,7 @@ function MonthlyProjection({ salary, openingBalance = 0, planStartDate, salaryCh
                 </tr>
               </tfoot>
             </table>
+          </div>
           </div>
         </div>
 
