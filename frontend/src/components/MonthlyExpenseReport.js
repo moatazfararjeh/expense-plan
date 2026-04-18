@@ -258,8 +258,12 @@ function MonthlyExpenseReport({
     // Reset cumulative balance for export
     let exportCumulativeBalance = parseFloat(openingBalance) || 0;
     
-    // Create detailed monthly sheets
-    monthlyData.forEach((monthData, index) => {
+    // Build one combined sheet with all months
+    const allMonthsData = [
+      ['Date', 'Cash For', `Amount (${currency})`, '% From Salary', `Total (${currency})`, 'Financial Summary'],
+    ];
+
+    monthlyData.forEach((monthData) => {
       const currentSalary = getSalaryForMonth(monthData.date);
       const [expMonthStr] = monthData.date.split('/');
       const expMonthAdditional = getAdditionalIncomeForMonth(parseInt(expMonthStr, 10));
@@ -267,27 +271,26 @@ function MonthlyExpenseReport({
       const recurringTotal = monthData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
       const dailyTotal = monthData.dailyTransactions.reduce((sum, trans) => sum + trans.amount, 0);
       const grandTotal = recurringTotal + dailyTotal;
-      
+
       const broughtForward = exportCumulativeBalance;
       const monthlyNet = expMonthTotalIncome - grandTotal;
       const remaining = monthlyNet + broughtForward;
       exportCumulativeBalance = remaining;
-      
+
       const allItems = [
         ...monthData.expenses,
         ...monthData.dailyTransactions
       ];
-      
-      // Build sheet data
-      const sheetData = [
-        ['Month:', monthData.date],
+
+      // Month heading row
+      allMonthsData.push(
         [],
-        ['Date', 'Cash For', `Amount (${currency})`, '% From Salary', `Total (${currency})`, 'Financial Summary'],
-      ];
-      
-      // Add brought forward if applicable
+        [`── ${monthData.date} ──`, '', '', '', '', ''],
+      );
+
+      // Brought forward row
       if (broughtForward !== 0) {
-        sheetData.push([
+        allMonthsData.push([
           monthData.date,
           'Brought Forward (from previous month)',
           '',
@@ -296,38 +299,10 @@ function MonthlyExpenseReport({
           `${broughtForward >= 0 ? '+' : ''}${broughtForward.toFixed(2)} ${currency}`
         ]);
       }
-      
-      // Add items
-      allItems.forEach((item, idx) => {
-        const percentage = currentSalary > 0 ? calculatePercentage(item.amount, currentSalary) : '0';
-        const row = [
-          idx === 0 ? monthData.date : '',
-          `${item.type === 'daily' ? '[Daily] ' : ''}${item.cashFor}`,
-          item.amount.toFixed(2),
-          salaryVisible && currentSalary > 0 ? `${percentage}%` : '-',
-          idx === 0 ? grandTotal.toFixed(2) : '',
-          ''
-        ];
-        
-        // Add financial summary in the right column
-        if (idx === 0) {
-          row[5] = `Salary: ${salaryVisible ? currentSalary.toFixed(2) : '******'} ${currency}`;
-        } else if (idx === 1 && expMonthAdditional > 0) {
-          row[5] = `Additional Income: +${expMonthAdditional.toFixed(2)} ${currency}`;
-        } else if (idx === (expMonthAdditional > 0 ? 2 : 1)) {
-          row[5] = `Monthly Net: ${monthlyNet.toFixed(2)} ${currency}`;
-        } else if (idx === (expMonthAdditional > 0 ? 3 : 2) && broughtForward !== 0) {
-          row[5] = `Brought Forward: ${broughtForward >= 0 ? '+' : ''}${broughtForward.toFixed(2)} ${currency}`;
-        } else if (idx === (broughtForward !== 0 ? (expMonthAdditional > 0 ? 4 : 3) : (expMonthAdditional > 0 ? 3 : 2))) {
-          row[5] = `Final Balance: ${remaining.toFixed(2)} ${currency}`;
-        }
-        
-        sheetData.push(row);
-      });
-      
-      // If no items, add placeholder
+
+      // Item rows
       if (allItems.length === 0) {
-        sheetData.push([
+        allMonthsData.push([
           monthData.date,
           'No expenses',
           '0.00',
@@ -335,37 +310,56 @@ function MonthlyExpenseReport({
           '0.00',
           `Salary: ${salaryVisible ? currentSalary.toFixed(2) : '******'} ${currency}`
         ]);
+      } else {
+        allItems.forEach((item, idx) => {
+          const percentage = currentSalary > 0 ? calculatePercentage(item.amount, currentSalary) : '0';
+          const row = [
+            idx === 0 ? monthData.date : '',
+            `${item.type === 'daily' ? '[Daily] ' : ''}${item.cashFor}`,
+            item.amount.toFixed(2),
+            salaryVisible && currentSalary > 0 ? `${percentage}%` : '-',
+            idx === 0 ? grandTotal.toFixed(2) : '',
+            ''
+          ];
+
+          if (idx === 0) {
+            row[5] = `Salary: ${salaryVisible ? currentSalary.toFixed(2) : '******'} ${currency}`;
+          } else if (idx === 1 && expMonthAdditional > 0) {
+            row[5] = `Additional Income: +${expMonthAdditional.toFixed(2)} ${currency}`;
+          } else if (idx === (expMonthAdditional > 0 ? 2 : 1)) {
+            row[5] = `Monthly Net: ${monthlyNet.toFixed(2)} ${currency}`;
+          } else if (idx === (expMonthAdditional > 0 ? 3 : 2) && broughtForward !== 0) {
+            row[5] = `Brought Forward: ${broughtForward >= 0 ? '+' : ''}${broughtForward.toFixed(2)} ${currency}`;
+          } else if (idx === (broughtForward !== 0 ? (expMonthAdditional > 0 ? 4 : 3) : (expMonthAdditional > 0 ? 3 : 2))) {
+            row[5] = `Final Balance: ${remaining.toFixed(2)} ${currency}`;
+          }
+
+          allMonthsData.push(row);
+        });
       }
-      
-      // Add total percentage row
+
+      // Total % row
       const totalPercentage = currentSalary > 0 ? calculatePercentage(grandTotal, currentSalary) : '0';
-      sheetData.push(
-        [],
-        [
-          'Total % of Salary:',
-          '',
-          '',
-          salaryVisible && currentSalary > 0 ? `${totalPercentage}%` : '-',
-          '',
-          salaryVisible && currentSalary > 0 ? `${grandTotal.toLocaleString()} / ${currentSalary.toLocaleString()} ${currency}` : ''
-        ],
-        []
-      );
-      
-      const ws = XLSX.utils.aoa_to_sheet(sheetData);
-      
-      // Set column widths
-      ws['!cols'] = [
-        { wch: 12 },  // Date
-        { wch: 35 },  // Cash For
-        { wch: 15 },  // Amount
-        { wch: 15 },  // % From Salary
-        { wch: 15 },  // Total
-        { wch: 30 }   // Financial Summary
-      ];
-      
-      XLSX.utils.book_append_sheet(wb, ws, `Month ${index + 1} - ${monthData.date.replace('/', '-')}`);
+      allMonthsData.push([
+        'Total % of Salary:',
+        '',
+        '',
+        salaryVisible && currentSalary > 0 ? `${totalPercentage}%` : '-',
+        '',
+        salaryVisible && currentSalary > 0 ? `${grandTotal.toLocaleString()} / ${currentSalary.toLocaleString()} ${currency}` : ''
+      ]);
     });
+
+    const wsAll = XLSX.utils.aoa_to_sheet(allMonthsData);
+    wsAll['!cols'] = [
+      { wch: 12 },  // Date
+      { wch: 35 },  // Cash For
+      { wch: 15 },  // Amount
+      { wch: 15 },  // % From Salary
+      { wch: 15 },  // Total
+      { wch: 30 }   // Financial Summary
+    ];
+    XLSX.utils.book_append_sheet(wb, wsAll, 'All Months');
     
     // Generate Excel file
     const fileName = `Expense_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
