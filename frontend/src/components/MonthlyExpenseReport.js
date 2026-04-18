@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import './MonthlyExpenseReport.css';
 
 function MonthlyExpenseReport({ 
@@ -230,140 +230,247 @@ function MonthlyExpenseReport({
   // Initialize with opening balance
   let cumulativeBalance = parseFloat(openingBalance) || 0;
 
-  const handleExportExcel = () => {
-    // Create a new workbook
-    const wb = XLSX.utils.book_new();
-    
-    // Summary sheet data
-    const summaryData = [
-      ['Detailed Monthly Expense Report'],
-      ['Generated on:', new Date().toLocaleString()],
-      [],
-      ['Summary Statistics'],
-      ['Total Salary Covered', reportStats.totalSalary.toLocaleString(), currency],
-      ['Months Covered', reportStats.monthsCovered],
-      ['Total Additional Income', reportStats.totalAdditionalIncome.toLocaleString(), currency],
-      ['Total Recurring Expenses', reportStats.totalRecurring.toLocaleString(), currency],
-      ['Total Daily Spending', reportStats.totalDaily.toLocaleString(), currency],
-      ['Total Spending', aggregatedTotal.toLocaleString(), currency],
-      ['Average Utilization', `${averageUtilization.toFixed(1)}%`],
-      ['Highest Utilization', `${reportStats.highestUtilization.toFixed(1)}%`],
-      ['Savings Power', savingsPower.toLocaleString(), currency],
-      [],
+  const handleExportExcel = async () => {
+    // ── Colour palette ──────────────────────────────────────────────
+    const C = {
+      headerBg:      'FF0F4C81',  // dark navy   – column headers
+      headerFg:      'FFFFFFFF',
+      monthBg:       'FF1A6BB5',  // mid-blue    – month heading rows
+      monthFg:       'FFFFFFFF',
+      carryBg:       'FFD6E4F7',  // pale blue   – brought-forward
+      carryFg:       'FF0C3B6E',
+      itemAlt:       'FFF0F7FF',  // very light blue – alternating rows
+      itemBase:      'FFFFFFFF',
+      dailyBg:       'FFE8F4FD',  // light sky   – daily transactions
+      totalBg:       'FF10B981',  // green       – total % row
+      totalFg:       'FFFFFFFF',
+      summaryTitleBg:'FF0F4C81',
+      summaryHdrBg:  'FF1E3A5F',
+      summaryHdrFg:  'FFFFFFFF',
+      summaryAlt:    'FFF5F9FF',
+      positiveClr:   'FF059669',
+      negativeClr:   'FFDC2626',
+      borderClr:     'FFB0C4DE',
+    };
+
+    const wb = new ExcelJS.Workbook();
+    wb.creator  = 'Expense Planner';
+    wb.created  = new Date();
+
+    // ── helper: apply thin border to a row ──────────────────────────
+    const borderCell = (cell, color = C.borderClr) => {
+      const side = { style: 'thin', color: { argb: color } };
+      cell.border = { top: side, left: side, bottom: side, right: side };
+    };
+
+    // ── helper: fill + font shorthand ────────────────────────────────
+    const styleCell = (cell, bgArgb, fgArgb, bold = false, sz = 11) => {
+      cell.fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgArgb } };
+      cell.font  = { color: { argb: fgArgb }, bold, size: sz, name: 'Calibri' };
+      cell.alignment = { vertical: 'middle', wrapText: true };
+      borderCell(cell);
+    };
+
+    // ════════════════════════════════════════════════════════════════
+    //  SHEET 1 – SUMMARY
+    // ════════════════════════════════════════════════════════════════
+    const ws1 = wb.addWorksheet('Summary');
+    ws1.columns = [
+      { width: 32 }, { width: 20 }, { width: 12 },
     ];
-    
-    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-    XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
-    
-    // Reset cumulative balance for export
+
+    // Title
+    ws1.mergeCells('A1:C1');
+    const titleCell = ws1.getCell('A1');
+    titleCell.value = 'Detailed Monthly Expense Report';
+    styleCell(titleCell, C.summaryTitleBg, C.headerFg, true, 14);
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    ws1.getRow(1).height = 28;
+
+    // Sub-title
+    ws1.mergeCells('A2:C2');
+    const subCell = ws1.getCell('A2');
+    subCell.value = `Generated on: ${new Date().toLocaleString()}`;
+    subCell.fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
+    subCell.font  = { color: { argb: 'FFB0C4DE' }, size: 10, name: 'Calibri', italic: true };
+    subCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+    ws1.addRow([]);
+
+    // Header
+    const sHdrRow = ws1.addRow(['Metric', 'Value', 'Currency']);
+    sHdrRow.eachCell(cell => styleCell(cell, C.summaryHdrBg, C.summaryHdrFg, true));
+    ws1.getRow(sHdrRow.number).height = 20;
+
+    const summaryRows = [
+      ['Total Salary Covered',     reportStats.totalSalary.toLocaleString(),                  currency],
+      ['Months Covered',           reportStats.monthsCovered,                                  ''],
+      ['Total Additional Income',  reportStats.totalAdditionalIncome.toLocaleString(),         currency],
+      ['Total Recurring Expenses', reportStats.totalRecurring.toLocaleString(),                currency],
+      ['Total Daily Spending',     reportStats.totalDaily.toLocaleString(),                    currency],
+      ['Total Spending',           aggregatedTotal.toLocaleString(),                           currency],
+      ['Average Utilization',      `${averageUtilization.toFixed(1)}%`,                       ''],
+      ['Highest Utilization',      `${reportStats.highestUtilization.toFixed(1)}%`,           ''],
+      ['Savings Power',            savingsPower.toLocaleString(),                              currency],
+    ];
+    summaryRows.forEach((data, i) => {
+      const row = ws1.addRow(data);
+      const bg = i % 2 === 0 ? C.summaryAlt : 'FFFFFFFF';
+      row.eachCell(cell => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+        cell.font = { name: 'Calibri', size: 11 };
+        borderCell(cell);
+      });
+      // colour Savings Power value
+      if (data[0] === 'Savings Power') {
+        row.getCell(2).font = {
+          bold: true, size: 12, name: 'Calibri',
+          color: { argb: savingsPower >= 0 ? C.positiveClr : C.negativeClr }
+        };
+      }
+    });
+
+    // ════════════════════════════════════════════════════════════════
+    //  SHEET 2 – ALL MONTHS
+    // ════════════════════════════════════════════════════════════════
+    const ws2 = wb.addWorksheet('All Months');
+    ws2.columns = [
+      { key: 'date',    width: 12 },
+      { key: 'cashFor', width: 36 },
+      { key: 'amount',  width: 16 },
+      { key: 'pct',     width: 16 },
+      { key: 'total',   width: 16 },
+      { key: 'summary', width: 32 },
+    ];
+
+    // Column header row
+    const colHeaders = ['Date', 'Cash For', `Amount (${currency})`, '% From Salary', `Total (${currency})`, 'Financial Summary'];
+    const hdrRow = ws2.addRow(colHeaders);
+    hdrRow.eachCell(cell => styleCell(cell, C.headerBg, C.headerFg, true, 11));
+    ws2.getRow(hdrRow.number).height = 22;
+
     let exportCumulativeBalance = parseFloat(openingBalance) || 0;
-    
-    // Build one combined sheet with all months
-    const allMonthsData = [
-      ['Date', 'Cash For', `Amount (${currency})`, '% From Salary', `Total (${currency})`, 'Financial Summary'],
-    ];
 
     monthlyData.forEach((monthData) => {
-      const currentSalary = getSalaryForMonth(monthData.date);
-      const [expMonthStr] = monthData.date.split('/');
+      const currentSalary    = getSalaryForMonth(monthData.date);
+      const [expMonthStr]    = monthData.date.split('/');
       const expMonthAdditional = getAdditionalIncomeForMonth(parseInt(expMonthStr, 10));
       const expMonthTotalIncome = currentSalary + expMonthAdditional;
-      const recurringTotal = monthData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
-      const dailyTotal = monthData.dailyTransactions.reduce((sum, trans) => sum + trans.amount, 0);
-      const grandTotal = recurringTotal + dailyTotal;
-
-      const broughtForward = exportCumulativeBalance;
-      const monthlyNet = expMonthTotalIncome - grandTotal;
-      const remaining = monthlyNet + broughtForward;
+      const recurringTotal   = monthData.expenses.reduce((s, e) => s + e.amount, 0);
+      const dailyTotal       = monthData.dailyTransactions.reduce((s, t) => s + t.amount, 0);
+      const grandTotal       = recurringTotal + dailyTotal;
+      const broughtForward   = exportCumulativeBalance;
+      const monthlyNet       = expMonthTotalIncome - grandTotal;
+      const remaining        = monthlyNet + broughtForward;
       exportCumulativeBalance = remaining;
 
-      const allItems = [
-        ...monthData.expenses,
-        ...monthData.dailyTransactions
-      ];
+      const allItems = [...monthData.expenses, ...monthData.dailyTransactions];
 
-      // Month heading row
-      allMonthsData.push(
-        [],
-        [`── ${monthData.date} ──`, '', '', '', '', ''],
-      );
+      // ── blank spacer
+      ws2.addRow([]);
 
-      // Brought forward row
+      // ── Month heading row
+      const monthHeadRow = ws2.addRow([`  ${monthData.date}`, '', '', '', '', '']);
+      ws2.mergeCells(`A${monthHeadRow.number}:F${monthHeadRow.number}`);
+      const mhCell = ws2.getCell(`A${monthHeadRow.number}`);
+      mhCell.value = `  ${monthData.date}`;
+      styleCell(mhCell, C.monthBg, C.monthFg, true, 12);
+      mhCell.alignment = { horizontal: 'left', vertical: 'middle' };
+      ws2.getRow(monthHeadRow.number).height = 20;
+
+      // ── Brought Forward row
       if (broughtForward !== 0) {
-        allMonthsData.push([
+        const bfRow = ws2.addRow([
           monthData.date,
-          'Brought Forward (from previous month)',
-          '',
-          '',
-          '',
+          '💼 Brought Forward (from previous month)',
+          '', '', '',
           `${broughtForward >= 0 ? '+' : ''}${broughtForward.toFixed(2)} ${currency}`
         ]);
+        bfRow.eachCell(cell => styleCell(cell, C.carryBg, C.carryFg, true));
+        bfRow.getCell(6).font = {
+          bold: true, size: 11, name: 'Calibri',
+          color: { argb: broughtForward >= 0 ? C.positiveClr : C.negativeClr }
+        };
       }
 
-      // Item rows
+      // ── Expense / transaction rows
       if (allItems.length === 0) {
-        allMonthsData.push([
-          monthData.date,
-          'No expenses',
-          '0.00',
-          '-',
-          '0.00',
+        const emptyRow = ws2.addRow([
+          monthData.date, 'No expenses', '0.00', '-', '0.00',
           `Salary: ${salaryVisible ? currentSalary.toFixed(2) : '******'} ${currency}`
         ]);
+        emptyRow.eachCell(cell => styleCell(cell, C.itemBase, 'FF6B7280'));
       } else {
         allItems.forEach((item, idx) => {
-          const percentage = currentSalary > 0 ? calculatePercentage(item.amount, currentSalary) : '0';
-          const row = [
+          const pct     = currentSalary > 0 ? calculatePercentage(item.amount, currentSalary) : '0';
+          const isDaily = item.type === 'daily';
+          const rowBg   = isDaily ? C.dailyBg : (idx % 2 === 0 ? C.itemBase : C.itemAlt);
+
+          let summaryVal = '';
+          if (idx === 0)
+            summaryVal = `Salary: ${salaryVisible ? currentSalary.toFixed(2) : '******'} ${currency}`;
+          else if (idx === 1 && expMonthAdditional > 0)
+            summaryVal = `Additional Income: +${expMonthAdditional.toFixed(2)} ${currency}`;
+          else if (idx === (expMonthAdditional > 0 ? 2 : 1))
+            summaryVal = `Monthly Net: ${monthlyNet.toFixed(2)} ${currency}`;
+          else if (idx === (expMonthAdditional > 0 ? 3 : 2) && broughtForward !== 0)
+            summaryVal = `Brought Forward: ${broughtForward >= 0 ? '+' : ''}${broughtForward.toFixed(2)} ${currency}`;
+          else if (idx === (broughtForward !== 0 ? (expMonthAdditional > 0 ? 4 : 3) : (expMonthAdditional > 0 ? 3 : 2)))
+            summaryVal = `Final Balance: ${remaining.toFixed(2)} ${currency}`;
+
+          const exRow = ws2.addRow([
             idx === 0 ? monthData.date : '',
-            `${item.type === 'daily' ? '[Daily] ' : ''}${item.cashFor}`,
-            item.amount.toFixed(2),
-            salaryVisible && currentSalary > 0 ? `${percentage}%` : '-',
-            idx === 0 ? grandTotal.toFixed(2) : '',
-            ''
-          ];
+            `${isDaily ? '[Daily] ' : ''}${item.cashFor}`,
+            parseFloat(item.amount.toFixed(2)),
+            salaryVisible && currentSalary > 0 ? `${pct}%` : '-',
+            idx === 0 ? parseFloat(grandTotal.toFixed(2)) : '',
+            summaryVal
+          ]);
 
-          if (idx === 0) {
-            row[5] = `Salary: ${salaryVisible ? currentSalary.toFixed(2) : '******'} ${currency}`;
-          } else if (idx === 1 && expMonthAdditional > 0) {
-            row[5] = `Additional Income: +${expMonthAdditional.toFixed(2)} ${currency}`;
-          } else if (idx === (expMonthAdditional > 0 ? 2 : 1)) {
-            row[5] = `Monthly Net: ${monthlyNet.toFixed(2)} ${currency}`;
-          } else if (idx === (expMonthAdditional > 0 ? 3 : 2) && broughtForward !== 0) {
-            row[5] = `Brought Forward: ${broughtForward >= 0 ? '+' : ''}${broughtForward.toFixed(2)} ${currency}`;
-          } else if (idx === (broughtForward !== 0 ? (expMonthAdditional > 0 ? 4 : 3) : (expMonthAdditional > 0 ? 3 : 2))) {
-            row[5] = `Final Balance: ${remaining.toFixed(2)} ${currency}`;
+          exRow.eachCell(cell => styleCell(cell, rowBg, 'FF1F2937'));
+          // Amount in blue
+          exRow.getCell(3).font = { color: { argb: 'FF0284C7' }, bold: true, size: 11, name: 'Calibri' };
+          // % column
+          if (salaryVisible && currentSalary > 0) {
+            const pctNum = parseFloat(pct);
+            const pctClr = pctNum < 30 ? 'FF059669' : pctNum < 60 ? 'FF2563EB' : pctNum < 80 ? 'FFD97706' : 'FFDC2626';
+            exRow.getCell(4).font = { color: { argb: pctClr }, bold: true, size: 11, name: 'Calibri' };
           }
-
-          allMonthsData.push(row);
+          // Summary column: colour Final Balance
+          if (summaryVal.startsWith('Final Balance')) {
+            exRow.getCell(6).font = {
+              bold: true, size: 11, name: 'Calibri',
+              color: { argb: remaining >= 0 ? C.positiveClr : C.negativeClr }
+            };
+          }
         });
       }
 
-      // Total % row
-      const totalPercentage = currentSalary > 0 ? calculatePercentage(grandTotal, currentSalary) : '0';
-      allMonthsData.push([
-        'Total % of Salary:',
+      // ── Total % row
+      const totalPct = currentSalary > 0 ? calculatePercentage(grandTotal, currentSalary) : '0';
+      const totRow = ws2.addRow([
+        'Total % of Salary:', '', '',
+        salaryVisible && currentSalary > 0 ? `${totalPct}%` : '-',
         '',
-        '',
-        salaryVisible && currentSalary > 0 ? `${totalPercentage}%` : '-',
-        '',
-        salaryVisible && currentSalary > 0 ? `${grandTotal.toLocaleString()} / ${currentSalary.toLocaleString()} ${currency}` : ''
+        salaryVisible && currentSalary > 0
+          ? `${grandTotal.toLocaleString()} / ${currentSalary.toLocaleString()} ${currency}`
+          : ''
       ]);
+      totRow.eachCell(cell => styleCell(cell, C.totalBg, C.totalFg, true));
+      ws2.getRow(totRow.number).height = 18;
     });
 
-    const wsAll = XLSX.utils.aoa_to_sheet(allMonthsData);
-    wsAll['!cols'] = [
-      { wch: 12 },  // Date
-      { wch: 35 },  // Cash For
-      { wch: 15 },  // Amount
-      { wch: 15 },  // % From Salary
-      { wch: 15 },  // Total
-      { wch: 30 }   // Financial Summary
-    ];
-    XLSX.utils.book_append_sheet(wb, wsAll, 'All Months');
-    
-    // Generate Excel file
-    const fileName = `Expense_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
-    XLSX.writeFile(wb, fileName);
+    // ── Download
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href     = url;
+    a.download = `Expense_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
