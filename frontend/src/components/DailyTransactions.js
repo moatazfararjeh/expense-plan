@@ -14,8 +14,8 @@ function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Fam
   const [editCategory, setEditCategory] = useState('');
   
   const currentDate = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState('all');
+  const [selectedYear, setSelectedYear] = useState('all');
 
   const months = [
     { value: 1, label: 'January' },
@@ -90,8 +90,9 @@ function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Fam
   // Filter transactions by selected month and year
   const filteredTransactions = transactions.filter(trans => {
     const transDate = new Date(trans.transaction_date);
-    return transDate.getMonth() + 1 === parseInt(selectedMonth) && 
-           transDate.getFullYear() === parseInt(selectedYear);
+    const monthMatch = selectedMonth === 'all' || transDate.getMonth() + 1 === parseInt(selectedMonth);
+    const yearMatch = selectedYear === 'all' || transDate.getFullYear() === parseInt(selectedYear);
+    return monthMatch && yearMatch;
   });
 
   // Group transactions by date
@@ -135,7 +136,13 @@ function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Fam
     availableYears.push(currentDate.getFullYear());
   }
 
-  const monthLabel = `${months[selectedMonth - 1].label} ${selectedYear}`;
+  const monthLabel = selectedMonth === 'all' && selectedYear === 'all'
+    ? 'All Time'
+    : selectedMonth === 'all'
+    ? `All Months ${selectedYear}`
+    : selectedYear === 'all'
+    ? `${months[selectedMonth - 1].label} (All Years)`
+    : `${months[selectedMonth - 1].label} ${selectedYear}`;
 
   return (
     <div className="monthly-expense-report">
@@ -248,6 +255,7 @@ function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Fam
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
           >
+            <option value="all">All Months</option>
             {months.map(month => (
               <option key={month.value} value={month.value}>{month.label}</option>
             ))}
@@ -260,6 +268,7 @@ function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Fam
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
           >
+            <option value="all">All Years</option>
             {availableYears.map(year => (
               <option key={year} value={year}>{year}</option>
             ))}
@@ -270,7 +279,7 @@ function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Fam
           className="chip-button"
           onClick={() => {
             setSelectedMonth(currentDate.getMonth() + 1);
-            setSelectedYear(currentDate.getFullYear());
+            setSelectedYear(String(currentDate.getFullYear()));
           }}
         >
           Jump to Current Month

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import './MonthlyExpenseReport.css';
 
@@ -186,29 +186,6 @@ function MonthlyExpenseReport({
     if (pct < 80) return '#d8970a'; // elevated utilization
     return '#d64545'; // critical utilization
   };
-
-  const [isMobileView, setIsMobileView] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-    const handleResize = (event) => setIsMobileView(event.matches);
-    setIsMobileView(mediaQuery.matches);
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handleResize);
-    } else {
-      mediaQuery.addListener(handleResize);
-    }
-
-    return () => {
-      if (mediaQuery.removeEventListener) {
-        mediaQuery.removeEventListener('change', handleResize);
-      } else {
-        mediaQuery.removeListener(handleResize);
-      }
-    };
-  }, []);
 
   const monthlyData = groupExpensesByMonth();
 
@@ -497,21 +474,7 @@ function MonthlyExpenseReport({
         </div>
       </div>
 
-      {isMobileView ? (
-        <div className="mobile-report-placeholder">
-          <h3>📱 Full Ledger via Excel</h3>
-          <p>
-            Detailed tables are optimized for wider screens. Tap <strong>Export Excel</strong> to download the complete
-            Excel file (.xlsx) and review it in Excel, Google Sheets, or any spreadsheet application.
-          </p>
-          <ul>
-            <li>Includes all months, transactions, and carry-forward math.</li>
-            <li>Best experienced in landscape orientation.</li>
-            <li>Ideal for sharing with advisors or archiving.</li>
-          </ul>
-        </div>
-      ) : (
-        monthlyData.map((monthData, index) => {
+      {monthlyData.map((monthData, index) => {
         const currentSalary = getSalaryForMonth(monthData.date);
         const [mStrDisplay] = monthData.date.split('/');
         const monthAdditionalIncome = getAdditionalIncomeForMonth(parseInt(mStrDisplay, 10));
@@ -551,6 +514,79 @@ function MonthlyExpenseReport({
               </span>
               <span className="month-utilization-tag">{utilization.toFixed(0)}% used</span>
             </div>
+
+            {/* ── Mobile card layout ── */}
+            <div className="mobile-month-view">
+              {broughtForward !== 0 && (
+                <div className="mob-carry-row">
+                  <span>💼 Brought Forward</span>
+                  <span className={broughtForward >= 0 ? 'positive' : 'negative'}>
+                    {broughtForward >= 0 ? '+' : ''}{broughtForward.toLocaleString(undefined, { minimumFractionDigits: 1 })} {currency}
+                  </span>
+                </div>
+              )}
+
+              <div className="mob-items-list">
+                {allItems.length === 0 ? (
+                  <div className="mob-item-row mob-empty">No expenses this month</div>
+                ) : (
+                  allItems.map((item, idx) => (
+                    <div key={idx} className="mob-item-row">
+                      <span className="mob-item-name">
+                        {item.type === 'daily' && <span className="daily-badge">Daily</span>}
+                        {item.cashFor}
+                      </span>
+                      <div className="mob-item-right">
+                        <span className="mob-item-amount">{item.amount.toLocaleString()} {currency}</span>
+                        {salaryVisible && monthTotalIncome > 0 && (
+                          <span className="mob-item-pct" style={{ color: getPercentageColor(calculatePercentage(item.amount, monthTotalIncome)) }}>
+                            {calculatePercentage(item.amount, monthTotalIncome)}%
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="mob-summary-section">
+                <div className="mob-summary-row">
+                  <span>Salary</span>
+                  <span>{formatSalary(currentSalary)} {currency}</span>
+                </div>
+                {monthAdditionalIncome > 0 && (
+                  <div className="mob-summary-row">
+                    <span>Additional Income</span>
+                    <span className="positive">+{monthAdditionalIncome.toLocaleString()} {currency}</span>
+                  </div>
+                )}
+                <div className="mob-summary-row">
+                  <span>Total Spent</span>
+                  <span>{grandTotal.toLocaleString()} {currency}</span>
+                </div>
+                {salaryVisible && monthTotalIncome > 0 && (
+                  <div className="mob-summary-row mob-utilization-row">
+                    <span>📊 % of Income</span>
+                    <span style={{ color: getPercentageColor(calculatePercentage(grandTotal, monthTotalIncome)), fontWeight: 700 }}>
+                      {calculatePercentage(grandTotal, monthTotalIncome)}%
+                    </span>
+                  </div>
+                )}
+                <div className="mob-summary-row">
+                  <span>Monthly Net</span>
+                  <span className={monthlyNet >= 0 ? 'positive' : 'negative'}>
+                    {monthlyNet.toLocaleString(undefined, { minimumFractionDigits: 1 })} {currency}
+                  </span>
+                </div>
+                <div className={`mob-summary-row mob-final-balance ${remaining >= 0 ? 'positive' : 'negative'}`}>
+                  <span>Final Balance</span>
+                  <span>{remaining.toLocaleString(undefined, { minimumFractionDigits: 1 })} {currency}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Desktop table layout ── */}
+            <div className="desktop-month-view">
             <div className="table-responsive">
             <table className="excel-table">
               <thead>
@@ -713,10 +749,10 @@ function MonthlyExpenseReport({
               </tbody>
             </table>
             </div>
+            </div>
           </div>
         );
-        })
-      )}
+        })}
     </div>
   );
 }

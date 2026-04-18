@@ -2071,6 +2071,48 @@ body[data-theme='light'] .brand-name {
     border-left-color: #cbd5e1;
     box-shadow: -10px 0 40px rgba(7, 19, 38, 0.2);
   }
+
+  body[data-theme='light'] .navbar-tabs .tab-btn {
+    background: rgba(15, 76, 129, 0.06);
+    border: 1px solid rgba(15, 76, 129, 0.15);
+    color: #1e293b;
+  }
+
+  body[data-theme='light'] .navbar-tabs .tab-btn:hover {
+    background: rgba(15, 76, 129, 0.12);
+    color: #0f4c81;
+    border-color: rgba(15, 76, 129, 0.3);
+    transform: none;
+  }
+
+  body[data-theme='light'] .navbar-tabs .tab-btn.active {
+    background: linear-gradient(120deg, #0f4c81, #12a7d4);
+    color: #ffffff;
+    border-color: transparent;
+  }
+
+  body[data-theme='light'] .navbar-user .logout-btn {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #dc2626;
+  }
+
+  body[data-theme='light'] .navbar-user .logout-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #b91c1c;
+    transform: none;
+  }
+
+  body[data-theme='light'] .navbar-user .user-name {
+    color: #1e293b;
+  }
+
+  body[data-theme='light'] .navbar-user .user-avatar {
+    background: rgba(15, 76, 129, 0.1);
+    border-color: rgba(15, 76, 129, 0.25);
+    color: #0f4c81;
+  }
   
   .navbar-rail.open {
     transform: translateX(0);
@@ -2248,7 +2290,7 @@ body[data-theme='light'] .brand-name {
 }
 
 body[data-theme='light'] .user-name {
-  color: #fff;
+  color: #1e293b;
 }
 
 .navbar-user .logout-btn {

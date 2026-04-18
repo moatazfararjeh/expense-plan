@@ -69,6 +69,7 @@ body[data-theme='light'] .report-subtitle {
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(10px);
+  min-width: 0;
 }
 
 body[data-theme='light'] .report-summary-card {
@@ -86,7 +87,7 @@ body[data-theme='light'] .report-summary-card {
 }
 
 .report-summary-card.wide {
-  grid-column: span 2;
+  grid-column: 1 / -1;
 }
 
 .summary-label {
@@ -307,7 +308,6 @@ body[data-theme='light'] .export-pdf-btn:hover {
   background: rgba(3, 12, 26, 0.5);
   border: 1px solid rgba(14, 165, 233, 0.2);
   border-left: 5px solid rgba(14, 165, 233, 0.4);
-  overflow-x: auto;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(12px);
   transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
@@ -888,6 +888,179 @@ body[data-theme='light'] .total-percentage-info {
 }
 
 /* ============================================
+   MOBILE / DESKTOP DUAL-VIEW TOGGLE
+   ============================================ */
+
+.mobile-month-view  { display: none; }
+.desktop-month-view { display: block; }
+
+@media (max-width: 767px) {
+  .mobile-month-view  { display: block; }
+  .desktop-month-view { display: none; }
+}
+
+/* ── Mobile card list styles ── */
+.mob-carry-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+  background: rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #7dd3fc;
+}
+
+body[data-theme='light'] .mob-carry-row {
+  background: #e0f2fe;
+  color: #0369a1;
+  border-color: #bae6fd;
+}
+
+.mob-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.mob-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(3, 12, 26, 0.5);
+  border: 1px solid rgba(14, 165, 233, 0.12);
+  gap: 0.5rem;
+}
+
+body[data-theme='light'] .mob-item-row {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.mob-item-row.mob-empty {
+  color: #94a3b8;
+  font-style: italic;
+  justify-content: center;
+}
+
+.mob-item-name {
+  color: #e2e8f0;
+  font-size: 0.88rem;
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-theme='light'] .mob-item-name {
+  color: #334155;
+}
+
+.mob-item-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  gap: 2px;
+}
+
+.mob-item-amount {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0ea5e9;
+}
+
+body[data-theme='light'] .mob-item-amount {
+  color: #0284c7;
+}
+
+.mob-item-pct {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Summary section */
+.mob-summary-section {
+  border-top: 1px solid rgba(14, 165, 233, 0.2);
+  padding-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+body[data-theme='light'] .mob-summary-section {
+  border-top-color: #e2e8f0;
+}
+
+.mob-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  border-radius: 6px;
+}
+
+body[data-theme='light'] .mob-summary-row {
+  color: #64748b;
+}
+
+.mob-summary-row span:last-child {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+body[data-theme='light'] .mob-summary-row span:last-child {
+  color: #1e293b;
+}
+
+.mob-utilization-row {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+body[data-theme='light'] .mob-utilization-row {
+  background: rgba(16, 185, 129, 0.06);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.mob-final-balance {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(6, 182, 212, 0.12));
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font-weight: 800;
+  margin-top: 0.25rem;
+}
+
+body[data-theme='light'] .mob-final-balance {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  border-color: #7dd3fc;
+}
+
+.mob-final-balance span {
+  font-size: 0.9rem !important;
+}
+
+.mob-final-balance span:last-child {
+  font-size: 1.05rem !important;
+}
+
+.mob-final-balance.positive span:last-child { color: var(--success-color) !important; }
+.mob-final-balance.negative span:last-child { color: var(--danger-color) !important; }
+
+/* ============================================
    MOBILE RESPONSIVE STYLES
    ============================================ */
 
@@ -929,18 +1102,6 @@ body[data-theme='light'] .total-percentage-info {
 
   .report-summary-card {
     padding: var(--spacing-sm);
-  }
-
-  .report-summary-card.wide {
-    grid-column: span 1;
-  }
-
-  .summary-card-label {
-    font-size: 0.7rem;
-  }
-
-  .summary-card-value {
-    font-size: 1.1rem;
   }
 
   .report-insight-banner {
@@ -989,7 +1150,10 @@ body[data-theme='light'] .total-percentage-info {
     font-size: 0.7rem;
   }
 
-  .excel-table-container {
+  .excel-table-container,
+  .table-responsive {
+    display: block;
+    width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
@@ -1053,10 +1217,6 @@ body[data-theme='light'] .total-percentage-info {
     gap: var(--spacing-md);
   }
 
-  .report-summary-card.wide {
-    grid-column: span 1;
-  }
-
   .summary-card-label {
     font-size: 0.75rem;
   }
@@ -1087,6 +1247,13 @@ body[data-theme='light'] .total-percentage-info {
   .excel-table {
     font-size: 0.75rem;
     min-width: 650px;
+  }
+
+  .table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .excel-table th,
@@ -1132,10 +1299,6 @@ body[data-theme='light'] .total-percentage-info {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .report-summary-card.wide {
-    grid-column: span 2;
-  }
-
   .report-insight-banner {
     flex-direction: column;
     text-align: left;
@@ -1143,6 +1306,13 @@ body[data-theme='light'] .total-percentage-info {
 
   .excel-table {
     font-size: 0.8rem;
+  }
+
+  .table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .excel-table th,
