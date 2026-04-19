@@ -53,13 +53,14 @@ function extractMerchant(desc) {
 /** Auto-detect category from merchant name */
 function guessCategory(merchant) {
   const m = merchant.toLowerCase();
-  if (/hospital|clinic|medical|pharmacy|dallah|doctor/.test(m)) return 'Medical';
+  if (/payment received|payment receive|auto db|sabnet|bank transfer/.test(m)) return 'Credit Card Payments';
+  if (/hospital|clinic|medical|dallah|doctor/.test(m)) return 'Medical';
   if (/pharmacy|dawaa|nahdi/.test(m)) return 'Pharmacy';
   if (/panda|hyper|market|grocery|supermarket|carrefour|lulu|keemart|nesto|danube/.test(m)) return 'Groceries';
   if (/fuel|petrol|petroly|gas station|aramco|shell|total|petro/.test(m)) return 'Fuel';
-  if (/restaurant|rest|burger|shawerma|pizza|coffee|cafe|snack|dining|pepper|barns|fraij|swylah|nada|lantern|karam/.test(m)) return 'Dining Out';
+  if (/restaurant|rest|burger|shawerma|pizza|coffee|cafe|snack|dining|pepper|barns|fraij|swylah|nada|lantern|karam|jalila|romansiah|hatab|steak|badia/.test(m)) return 'Dining Out';
   if (/amazon|noon|jarir|extra|electronics/.test(m)) return 'Shopping';
-  if (/b8ak|stc|mobily|zain|internet|telecom/.test(m)) return 'Internet & Mobile';
+  if (/apple\.com|b8ak|stc|mobily|zain|internet|telecom|asharq/.test(m)) return 'Subscriptions';
   if (/laundry|lamat|dry clean/.test(m)) return 'Household Items';
   if (/smiles|entertain|cinema|fun|play/.test(m)) return 'Entertainment';
   if (/school|education|learning|academy/.test(m)) return 'Education';
@@ -254,7 +255,7 @@ export default function BankImport({ getAuthHeader, currency = 'SAR', categories
           <div className="bank-import-drop-icon">📂</div>
           <p className="bank-import-drop-text">Click to select CSV file</p>
           <p className="bank-import-drop-hint">
-            Supports AlRajhi debit format and cashback credit card format • Auto-detected
+            Supports AlRajhi debit, cashback card &amp; advance credit card formats • Auto-detected
           </p>
         </div>
       )}
