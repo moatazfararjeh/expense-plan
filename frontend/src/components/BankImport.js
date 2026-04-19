@@ -61,6 +61,21 @@ function guessCategory(merchant) {
   return 'Miscellaneous';
 }
 
+/** Properly parse a CSV line respecting quoted fields (handles "5,495.57") */
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQuotes = !inQuotes; }
+    else if (ch === ',' && !inQuotes) { result.push(current); current = ''; }
+    else { current += ch; }
+  }
+  result.push(current);
+  return result;
+}
+
 /** Parse the entire CSV text into transaction objects */
 function parseCSV(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
@@ -74,15 +89,14 @@ function parseCSV(text) {
     const line = dataLines[i];
     if (!line) continue;
 
-    // CSV columns: Date, Description, Amount SAR, Balance SAR
-    // Amount may be like -100 or "-1,234.56" — strip commas and quotes
-    const parts = line.split(',');
-    if (parts.length < 3) { errors.push(`Line ${i + 2}: not enough columns`); continue; }
+    // Properly parse quoted CSV fields
+    const parts = parseCSVLine(line);
+    if (parts.length < 4) { errors.push(`Line ${i + 2}: not enough columns`); continue; }
 
+    // Columns: Date, Description, Amount SAR, Balance SAR
     const rawDate = parts[0].trim();
-    // Description may contain commas — rejoin the middle
-    const rawAmount = parts[parts.length - 2].replace(/[",]/g, '').trim();
-    const rawDesc = parts.slice(1, parts.length - 2).join(',').replace(/^"|"$/g, '').trim();
+    const rawDesc = parts.slice(1, parts.length - 2).join(',').trim();
+    const rawAmount = parts[parts.length - 2].replace(/[,]/g, '').trim();
 
     const date = parseDate(rawDate);
     if (!date) { errors.push(`Line ${i + 2}: invalid date "${rawDate}"`); continue; }
