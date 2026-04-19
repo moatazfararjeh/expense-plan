@@ -107,7 +107,16 @@ app.get('/api/settings', authenticateToken, async (req, res) => {
         opening_balance: 0,
         plan_start_date: new Date().toISOString().split('T')[0],
         currency: 'SAR',
-        categories: ['Family Expense', 'My Expense', 'Loan', 'Other']
+        categories: [
+          'Housing / Rent', 'Utilities', 'Groceries', 'Transportation', 'Fuel',
+          'Car Maintenance', 'Insurance', 'Medical', 'Pharmacy', 'Education',
+          'Kids Expenses', 'Entertainment', 'Dining Out', 'Shopping', 'Clothing',
+          'Travel', 'Savings', 'Investments', 'Credit Card Payments', 'Internet & Mobile',
+          'Subscriptions', 'Gifts', 'Charity', 'Household Items', 'Personal Care',
+          'Gym / Fitness', 'Pets', 'Maintenance & Repairs', 'Business Expenses',
+          'Emergency Fund', 'Taxes', 'Parking & Tolls', 'Electronics', 'Furniture',
+          'Coffee & Snacks', 'Miscellaneous'
+        ]
       });
     }
   } catch (error) {
