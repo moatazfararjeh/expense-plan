@@ -1,7 +1,7 @@
 # Multi-stage build for Expense Plan Application
 
 # Stage 1: Build Frontend
-FROM node:18-alpine AS frontend-build
+FROM node:20-alpine AS frontend-build
 WORKDIR /app/frontend
 
 # Keep memory low to avoid CPU throttling on small VPS
@@ -19,7 +19,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 2: Setup Backend
-FROM node:18-alpine
+FROM node:20-alpine
 WORKDIR /app
 
 # Install backend dependencies

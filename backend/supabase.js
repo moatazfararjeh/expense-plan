@@ -36,14 +36,15 @@ async function authenticateSupabase() {
     });
 
     if (error) {
-      console.error('Supabase authentication error:', error.message);
+      console.error('Supabase authentication error:', error.message || error.code || JSON.stringify(error));
+      console.error('Check SUPABASE_URL, SUPABASE_SERVICE_KEY, SUPABASE_EMAIL, SUPABASE_PASSWORD env vars in Coolify.');
       process.exit(1);
     }
 
     isAuthenticated = true;
     console.log('Supabase client authenticated successfully');
   } catch (error) {
-    console.error('Failed to authenticate with Supabase:', error);
+    console.error('Failed to authenticate with Supabase:', error.message || JSON.stringify(error));
     process.exit(1);
   }
 }

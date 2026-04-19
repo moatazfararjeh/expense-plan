@@ -28,6 +28,7 @@ $backendPort = 1001
 $frontendPort = 2001
 
 Write-Host "Step 1: Building Frontend..." -ForegroundColor Yellow
+Write-Host "TIP: To avoid CPU throttling on VPS, use build-local.ps1 + deploy-files-only.ps1 instead." -ForegroundColor DarkYellow
 Set-Location $frontendSource
 Write-Host "Running npm install..." -ForegroundColor Gray
 npm install
@@ -37,7 +38,12 @@ if ($LASTEXITCODE -ne 0) {
     exit
 }
 
-Write-Host "Running npm build..." -ForegroundColor Gray
+# Limit Node heap to reduce CPU/memory spike on VPS; disable source maps to speed up build
+$env:NODE_OPTIONS       = "--max-old-space-size=512"
+$env:GENERATE_SOURCEMAP = "false"
+$env:CI                 = "false"
+
+Write-Host "Running npm build (low-CPU mode)..." -ForegroundColor Gray
 npm run build
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERROR: npm build failed!" -ForegroundColor Red
