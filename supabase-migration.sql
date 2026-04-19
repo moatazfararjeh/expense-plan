@@ -80,6 +80,16 @@ CREATE INDEX IF NOT EXISTS idx_daily_transactions_date ON daily_transactions(tra
 CREATE INDEX IF NOT EXISTS idx_salary_changes_user_id ON salary_changes(user_id);
 CREATE INDEX IF NOT EXISTS idx_additional_income_user_id ON additional_income(user_id);
 
+-- Disable RLS on all tables (backend uses service role key which bypasses RLS anyway)
+-- This ensures no accidental lockout if RLS was enabled
+ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE user_settings DISABLE ROW LEVEL SECURITY;
+ALTER TABLE monthly_expenses DISABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_transactions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE salary_changes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE additional_income DISABLE ROW LEVEL SECURITY;
+CREATE INDEX IF NOT EXISTS idx_additional_income_user_id ON additional_income(user_id);
+
 -- Display success message
 DO $$
 BEGIN

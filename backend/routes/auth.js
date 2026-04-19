@@ -140,15 +140,11 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Login error:', error);
-    console.error('Error details:', {
-      message: error.message,
-      code: error.code,
-      stack: error.stack
-    });
+    const errMsg = error?.message || error?.code || error?.details || JSON.stringify(error);
+    console.error('Login error:', errMsg);
     res.status(500).json({ 
       error: 'Error logging in',
-      details: process.env.NODE_ENV === 'production' ? undefined : error.message
+      details: errMsg
     });
   }
 });
