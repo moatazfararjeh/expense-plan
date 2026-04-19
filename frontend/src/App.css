@@ -2522,6 +2522,7 @@ body[data-theme='light'] .content-subtitle {
 .dashboard-column {
   display: flex;
   flex-direction: column;
+  gap: 2rem;
 }
 
 /* ===== TRANSACTION SUB-TABS ===== */

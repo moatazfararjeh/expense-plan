@@ -6,8 +6,8 @@
   box-shadow: var(--shadow-xl);
   color: var(--gray-50);
   backdrop-filter: blur(18px);
-  max-width: 1400px;
-  margin: 2rem auto;
+  width: 100%;
+  margin: 0;
 }
 
 body[data-theme='light'] .monthly-projection-container {
