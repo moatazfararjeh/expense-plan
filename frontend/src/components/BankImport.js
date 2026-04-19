@@ -104,17 +104,18 @@ function parseCSV(text) {
     const amount = parseFloat(rawAmount);
     if (isNaN(amount)) { errors.push(`Line ${i + 2}: invalid amount "${rawAmount}"`); continue; }
 
-    // Only import expenses (negative amounts)
-    if (amount >= 0) continue;
+    if (amount === 0) continue;
 
     const merchant = extractMerchant(rawDesc);
-    const category = guessCategory(merchant);
+    const isIncome = amount > 0;
+    const category = isIncome ? 'Income' : guessCategory(merchant);
 
     results.push({
       transaction_date: date,
       description: merchant,
       amount: Math.abs(amount),
       category,
+      type: isIncome ? 'income' : 'expense',
       _rawDesc: rawDesc
     });
   }
@@ -183,13 +184,14 @@ export default function BankImport({ getAuthHeader, currency = 'SAR', categories
     'Groceries', 'Dining Out', 'Fuel', 'Medical', 'Pharmacy', 'Shopping',
     'Entertainment', 'Internet & Mobile', 'Household Items', 'Miscellaneous'
   ];
+  const incomeCategories = ['Income', 'Salary', 'Bonus', 'Refund', 'Transfer In', 'Other Income'];
 
   return (
     <div className="bank-import-container">
       <div className="bank-import-header">
         <h2>🏦 Bank Statement Import</h2>
         <p className="bank-import-subtitle">
-          Upload your bank CSV export to automatically add daily transactions. Only expenses (negative amounts) are imported.
+          Upload your bank CSV export to automatically add daily transactions. Expenses and income are both imported.
         </p>
       </div>
 
@@ -223,7 +225,10 @@ export default function BankImport({ getAuthHeader, currency = 'SAR', categories
       {status === 'previewing' && preview.length > 0 && (
         <>
           <div className="bank-import-preview-header">
-            <span className="bank-import-count">{preview.length} expenses ready to import</span>
+            <div className="bank-import-count-wrap">
+              <span className="bank-import-count">{preview.filter(r => r.type === 'expense').length} expenses</span>
+              <span className="bank-import-count bank-import-count-income">{preview.filter(r => r.type === 'income').length} income</span>
+            </div>
             <div className="bank-import-actions">
               <button className="btn-secondary" onClick={reset}>Cancel</button>
               <button className="btn-primary" onClick={handleImport}>
@@ -236,6 +241,7 @@ export default function BankImport({ getAuthHeader, currency = 'SAR', categories
             <table className="bank-import-table">
               <thead>
                 <tr>
+                  <th>Type</th>
                   <th>Date</th>
                   <th>Description</th>
                   <th>Amount ({currency})</th>
@@ -245,7 +251,12 @@ export default function BankImport({ getAuthHeader, currency = 'SAR', categories
               </thead>
               <tbody>
                 {preview.map((row, i) => (
-                  <tr key={i}>
+                  <tr key={i} className={row.type === 'income' ? 'bank-import-row-income' : ''}>
+                    <td>
+                      <span className={`bank-import-type-badge ${row.type === 'income' ? 'badge-income' : 'badge-expense'}`}>
+                        {row.type === 'income' ? '💰 Income' : '💸 Expense'}
+                      </span>
+                    </td>
                     <td>
                       <input
                         type="date"
@@ -278,7 +289,7 @@ export default function BankImport({ getAuthHeader, currency = 'SAR', categories
                         onChange={e => updateRow(i, 'category', e.target.value)}
                         className="bank-import-input"
                       >
-                        {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                        {(row.type === 'income' ? incomeCategories : allCategories).map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </td>
                     <td>
