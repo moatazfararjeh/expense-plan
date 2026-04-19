@@ -4,8 +4,8 @@
 FROM node:18-alpine AS frontend-build
 WORKDIR /app/frontend
 
-# Increase memory limit and disable CI mode for build
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+# Keep memory low to avoid CPU throttling on small VPS
+ENV NODE_OPTIONS="--max-old-space-size=512"
 ENV CI=false
 ENV GENERATE_SOURCEMAP=false
 
@@ -14,7 +14,7 @@ ARG REACT_APP_API_URL=https://expense.ardalsharq.com
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
 COPY frontend/package*.json ./
-RUN npm install --legacy-peer-deps --no-audit --no-fund
+RUN npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline
 COPY frontend/ ./
 RUN npm run build
 
