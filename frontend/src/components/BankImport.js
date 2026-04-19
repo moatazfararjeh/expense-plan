@@ -22,11 +22,13 @@ function parseDate(raw) {
 
 /** Extract a readable merchant name from the messy bank description */
 function extractMerchant(desc) {
-  // The merchant name appears after a city name + bank code block and before ×
-  // Pattern: ...CITY  BANKNAME<MerchantName here>× or end
+  // Format 2 (cashback card): strip leading 16-digit card number
+  const noCard = desc.replace(/^\d{16}/, '').trim();
+
+  // Format 1 (debit): merchant appears after bank code
   const patterns = [
-    /(?:ALRAJHI|SABB|NCB|INMA|RIYAD|FRENCH|ALBI|ALINMA)[A-Z0-9 ]*?([A-Za-z][A-Za-z0-9 \-&'.]+?)(?:×|$)/,
-    /682002[A-Za-z0-9 ]*?([A-Za-z][A-Za-z0-9 \-&'.]+?)(?:×|$)/,
+    /(?:ALRAJHI|SABB|NCB|INMA|RIYAD|FRENCH|ALBI|ALINMA)[A-Z0-9 ]*?([A-Za-z][A-Za-z0-9 \-&'.]+?)(?:\u00d7|$)/,
+    /682002[A-Za-z0-9 ]*?([A-Za-z][A-Za-z0-9 \-&'.]+?)(?:\u00d7|$)/,
   ];
   for (const re of patterns) {
     const m = desc.match(re);
@@ -34,7 +36,13 @@ function extractMerchant(desc) {
       return m[1].trim().replace(/\s+/g, ' ');
     }
   }
-  // Fallback: grab last readable Latin segment before "بطاقة"
+
+  // If card number was stripped, use what remains (trim trailing city code like RIY, BUR)
+  if (noCard.length > 2) {
+    return noCard.replace(/\s+[A-Z]{3}$/, '').replace(/\s+/g, ' ').trim();
+  }
+
+  // Fallback: last readable Latin segment
   const latinSegments = desc.match(/[A-Za-z][A-Za-z0-9 \-&'.]{3,}/g);
   if (latinSegments && latinSegments.length > 0) {
     return latinSegments[latinSegments.length - 1].trim();
@@ -76,35 +84,73 @@ function parseCSVLine(line) {
   return result;
 }
 
+/** Detect CSV format from header line */
+function detectFormat(header) {
+  const h = header.toLowerCase();
+  if (h.includes('amount(sar)') || h.includes('posting date') || h.includes('status')) return 'cashback';
+  return 'debit'; // default: Date, Description, Amount SAR, Balance SAR
+}
+
+/** Parse cashback bank format: Transaction date, Description, Posting date, Status, Amount(SAR), Amount(Other) */
+function parseCashbackLine(parts, lineNum, errors) {
+  if (parts.length < 5) { errors.push(`Line ${lineNum}: not enough columns`); return null; }
+
+  const rawDate = parts[0].trim();
+  const rawDesc = parts[1].trim();
+  // Amount(SAR) is parts[4], format: "-51.00 SAR"
+  const rawAmount = parts[4].replace(/[^\d.\-]/g, '').trim();
+
+  const date = parseDate(rawDate);
+  if (!date) { errors.push(`Line ${lineNum}: invalid date "${rawDate}"`); return null; }
+
+  const amount = parseFloat(rawAmount);
+  if (isNaN(amount)) { errors.push(`Line ${lineNum}: invalid amount "${parts[4]}"`); return null; }
+  if (amount === 0) return null;
+
+  return { date, rawDesc, amount };
+}
+
+/** Parse debit bank format: Date, Description, Amount SAR, Balance SAR */
+function parseDebitLine(parts, lineNum, errors) {
+  if (parts.length < 4) { errors.push(`Line ${lineNum}: not enough columns`); return null; }
+
+  const rawDate = parts[0].trim();
+  const rawDesc = parts.slice(1, parts.length - 2).join(',').trim();
+  const rawAmount = parts[parts.length - 2].replace(/[,]/g, '').trim();
+
+  const date = parseDate(rawDate);
+  if (!date) { errors.push(`Line ${lineNum}: invalid date "${rawDate}"`); return null; }
+
+  const amount = parseFloat(rawAmount);
+  if (isNaN(amount)) { errors.push(`Line ${lineNum}: invalid amount "${rawAmount}"`); return null; }
+  if (amount === 0) return null;
+
+  return { date, rawDesc, amount };
+}
+
 /** Parse the entire CSV text into transaction objects */
 function parseCSV(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   const results = [];
   const errors = [];
 
-  // Skip header row
-  const dataLines = lines[0].toLowerCase().includes('date') ? lines.slice(1) : lines;
+  const hasHeader = lines[0].toLowerCase().includes('date');
+  const format = hasHeader ? detectFormat(lines[0]) : 'debit';
+  const dataLines = hasHeader ? lines.slice(1) : lines;
 
   for (let i = 0; i < dataLines.length; i++) {
     const line = dataLines[i];
     if (!line) continue;
 
-    // Properly parse quoted CSV fields
     const parts = parseCSVLine(line);
-    if (parts.length < 4) { errors.push(`Line ${i + 2}: not enough columns`); continue; }
+    const lineNum = i + 2;
 
-    // Columns: Date, Description, Amount SAR, Balance SAR
-    const rawDate = parts[0].trim();
-    const rawDesc = parts.slice(1, parts.length - 2).join(',').trim();
-    const rawAmount = parts[parts.length - 2].replace(/[,]/g, '').trim();
+    const parsed = format === 'cashback'
+      ? parseCashbackLine(parts, lineNum, errors)
+      : parseDebitLine(parts, lineNum, errors);
 
-    const date = parseDate(rawDate);
-    if (!date) { errors.push(`Line ${i + 2}: invalid date "${rawDate}"`); continue; }
-
-    const amount = parseFloat(rawAmount);
-    if (isNaN(amount)) { errors.push(`Line ${i + 2}: invalid amount "${rawAmount}"`); continue; }
-
-    if (amount === 0) continue;
+    if (!parsed) continue;
+    const { date, rawDesc, amount } = parsed;
 
     const merchant = extractMerchant(rawDesc);
     const isIncome = amount > 0;
@@ -208,7 +254,7 @@ export default function BankImport({ getAuthHeader, currency = 'SAR', categories
           <div className="bank-import-drop-icon">📂</div>
           <p className="bank-import-drop-text">Click to select CSV file</p>
           <p className="bank-import-drop-hint">
-            Exported from your bank • Format: Date, Description, Amount SAR, Balance SAR
+            Supports AlRajhi debit format and cashback credit card format • Auto-detected
           </p>
         </div>
       )}
