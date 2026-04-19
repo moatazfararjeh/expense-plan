@@ -13,6 +13,7 @@ import ExpenseChart from './components/ExpenseChart';
 import MonthlyProjection from './components/MonthlyProjection';
 import MonthlyExpenseReport from './components/MonthlyExpenseReport';
 import Layout from './components/Layout';
+import BankImport from './components/BankImport';
 
 const API_URL = process.env.REACT_APP_API_URL ? `${process.env.REACT_APP_API_URL}/api` : 'http://localhost:3001/api';
 
@@ -456,6 +457,14 @@ function App() {
               <span className="tab-emoji">💳</span>
               <span>Daily Transactions</span>
             </button>
+
+            <button
+              className={`sub-tab-btn ${transactionSubTab === 'bank-import' ? 'active' : ''}`}
+              onClick={() => setTransactionSubTab('bank-import')}
+            >
+              <span className="tab-emoji">🏦</span>
+              <span>Bank Import</span>
+            </button>
           </div>
           
           {/* Tab Content */}
@@ -492,6 +501,17 @@ function App() {
                   onDelete={deleteTransaction}
                   categories={categories}
                   currency={currency}
+                />
+              </div>
+            )}
+
+            {transactionSubTab === 'bank-import' && (
+              <div className="fade-in">
+                <BankImport
+                  getAuthHeader={getAuthHeader}
+                  currency={currency}
+                  categories={categories}
+                  onImported={fetchData}
                 />
               </div>
             )}

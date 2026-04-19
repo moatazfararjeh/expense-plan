@@ -424,6 +424,38 @@ app.delete('/api/transactions/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Bulk import transactions from bank CSV
+app.post('/api/transactions/bulk-import', authenticateToken, async (req, res) => {
+  const { transactions } = req.body;
+
+  if (!Array.isArray(transactions) || transactions.length === 0) {
+    return res.status(400).json({ error: 'No transactions provided' });
+  }
+
+  const rows = transactions.map(t => ({
+    user_id: req.user.id,
+    description: t.description,
+    amount: encryptValue(t.amount),
+    transaction_date: t.transaction_date,
+    category: t.category || 'Miscellaneous'
+  }));
+
+  try {
+    const { data, error } = await supabase
+      .from('daily_transactions')
+      .insert(rows)
+      .select();
+
+    if (error) throw error;
+
+    const imported = data.map(d => decryptFields(d, ['amount']));
+    res.json({ imported: imported.length, transactions: imported });
+  } catch (error) {
+    console.error('Error bulk importing transactions:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get all additional income sources
 app.get('/api/additional-income', authenticateToken, async (req, res) => {
   try {
