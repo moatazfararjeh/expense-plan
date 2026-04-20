@@ -92,7 +92,8 @@ function MonthlyExpenseReport({
         if (grouped[key]) {
           grouped[key].dailyTransactions.push({
             date: trans.transaction_date,
-            cashFor: trans.category || trans.description || 'Daily Transaction',
+            cashFor: trans.category || 'Daily Transaction',
+            description: trans.description || '',
             amount: parseFloat(trans.amount) || 0,
             type: 'daily'
           });
@@ -769,7 +770,8 @@ function MonthlyExpenseReport({
                           <td className="date-cell">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day:'2-digit', month:'short' }) : ''}</td>
                           <td className="expense-name daily-item">
                             <span className="daily-badge">Daily</span>
-                            {item.cashFor}
+                            <span className="daily-category">{item.cashFor}</span>
+                            {item.description && <span className="daily-desc-name">{item.description}</span>}
                           </td>
                           <td className="expense-amount">{item.amount.toLocaleString()}</td>
                           <td className="percentage-cell">

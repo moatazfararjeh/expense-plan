@@ -106,6 +106,14 @@ body[data-theme='light'] .daily-group    td { background: #d1fae5; color: #065f4
 body[data-theme='light'] .recurring-row { background: #f0f7ff; }
 body[data-theme='light'] .daily-row     { background: #f0fdf4; }
 
+.daily-category { font-weight: 600; margin-right: 0.4rem; }
+.daily-desc-name {
+  font-size: 0.8rem;
+  opacity: 0.65;
+  font-style: italic;
+}
+body[data-theme='light'] .daily-desc-name { opacity: 0.55; }
+
 /* ── Inline summary shown when collapsed ── */
 .month-collapsed-summary {
   font-size: 0.82rem;

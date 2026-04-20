@@ -442,7 +442,11 @@ function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Fam
                             </td>
                             <td className="trans-cell-actions">
                               <button className="trans-icon-btn" type="button" onClick={() => startEdit(transaction)} title="Edit">✏️</button>
-                              <button className="trans-icon-btn danger" type="button" onClick={() => onDelete(transaction.id)} title="Delete">🗑️</button>
+                              <button className="trans-icon-btn danger" type="button" onClick={() => {
+                                if (window.confirm(`Delete "${transaction.description}"?\nAmount: ${parseFloat(transaction.amount).toLocaleString()} ${currency}`)) {
+                                  onDelete(transaction.id);
+                                }
+                              }} title="Delete">🗑️</button>
                             </td>
                           </>
                         )}
