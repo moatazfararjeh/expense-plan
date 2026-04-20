@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import ExcelJS from 'exceljs';
 import './MonthlyExpenseReport.css';
 
@@ -185,6 +185,16 @@ function MonthlyExpenseReport({
   };
 
   const monthlyData = groupExpensesByMonth();
+
+  // Collapse state: set of month keys that are collapsed
+  const [collapsedMonths, setCollapsedMonths] = useState(new Set());
+  const toggleMonth = (key) => setCollapsedMonths(prev => {
+    const next = new Set(prev);
+    next.has(key) ? next.delete(key) : next.add(key);
+    return next;
+  });
+  const collapseAll  = () => setCollapsedMonths(new Set(monthlyData.map(m => m.date)));
+  const expandAll    = () => setCollapsedMonths(new Set());
 
   const reportStats = useMemo(() => {
     return monthlyData.reduce(
@@ -487,6 +497,8 @@ function MonthlyExpenseReport({
             <span className="export-icon">📊</span>
             <span>Export Excel</span>
           </button>
+          <button type="button" className="collapse-all-btn" onClick={collapseAll} title="Collapse all months">⊖ Collapse All</button>
+          <button type="button" className="collapse-all-btn" onClick={expandAll}  title="Expand all months">⊕ Expand All</button>
 
         </div>
       </div>
@@ -579,13 +591,22 @@ function MonthlyExpenseReport({
 
         return (
           <div key={index} className={`month-report-section month-status-${healthStatus}${index % 2 === 1 ? ' month-alt' : ''}`}>
-            <div className="month-section-header">
+            <div className="month-section-header" onClick={() => toggleMonth(monthData.date)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+              <span className="month-collapse-icon">{collapsedMonths.has(monthData.date) ? '▶' : '▼'}</span>
               <span className="month-section-badge">{monthData.date}</span>
               <span className={`month-status-pill status-${healthStatus}`}>
                 {healthStatus === 'healthy' ? '● Healthy' : healthStatus === 'elevated' ? '● Moderate' : healthStatus === 'warning' ? '▲ High' : '⬤ Over Budget'}
               </span>
               <span className="month-utilization-tag">{utilization.toFixed(0)}% used</span>
+              {collapsedMonths.has(monthData.date) && (
+                <span className="month-collapsed-summary">
+                  Total: {grandTotal.toLocaleString()} {currency} &nbsp;|&nbsp;
+                  Balance: <span className={remaining >= 0 ? 'positive' : 'negative'}>{remaining.toLocaleString(undefined, { maximumFractionDigits: 0 })} {currency}</span>
+                </span>
+              )}
             </div>
+
+            {!collapsedMonths.has(monthData.date) && (<>
 
             {/* ── Mobile card layout ── */}
             <div className="mobile-month-view">
@@ -822,6 +843,7 @@ function MonthlyExpenseReport({
             </table>
             </div>
             </div>
+          </>) /* end !collapsed */}
           </div>
         );
         })}

@@ -53,6 +53,40 @@ body[data-theme='light'] .report-subtitle {
   flex-wrap: wrap;
 }
 
+/* ── Collapse / Expand All button ── */
+.collapse-all-btn {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.75);
+  border-radius: 10px;
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.collapse-all-btn:hover { background: rgba(18,167,212,0.2); color: #fff; border-color: rgba(18,167,212,0.5); }
+body[data-theme='light'] .collapse-all-btn { background: #f1f5f9; border-color: #cbd5e1; color: #334155; }
+body[data-theme='light'] .collapse-all-btn:hover { background: #e0f2fe; border-color: #7dd3fc; color: #0369a1; }
+
+/* ── Collapse arrow icon ── */
+.month-collapse-icon {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  min-width: 12px;
+  transition: transform 0.2s;
+}
+
+/* ── Inline summary shown when collapsed ── */
+.month-collapsed-summary {
+  font-size: 0.82rem;
+  opacity: 0.75;
+  margin-left: auto;
+}
+.month-collapsed-summary .positive { color: #10b981; font-weight: 700; }
+.month-collapsed-summary .negative { color: #ef4444; font-weight: 700; }
+
 .report-summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
