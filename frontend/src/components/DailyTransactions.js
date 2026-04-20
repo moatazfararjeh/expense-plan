@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from 'react';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Family Expense', 'My Expense', 'Loan', 'Other'], currency = 'SAR' }) {
   const [description, setDescription] = useState('');
@@ -124,6 +126,72 @@ function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Fam
       averageDaily: daysTracked ? total / daysTracked : 0
     };
   }, [filteredTransactions]);
+
+  const exportToExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Expense Plan';
+    workbook.created = new Date();
+
+    const sheet = workbook.addWorksheet('Daily Transactions');
+
+    // Column definitions
+    sheet.columns = [
+      { header: 'Date',        key: 'date',        width: 15 },
+      { header: 'Description', key: 'description', width: 40 },
+      { header: 'Category',    key: 'category',    width: 22 },
+      { header: `Amount (${currency})`, key: 'amount', width: 18 },
+    ];
+
+    // Style header row
+    const headerRow = sheet.getRow(1);
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F4C81' } };
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+    headerRow.height = 20;
+
+    // Add data rows — sorted descending by date (matches UI)
+    const sorted = [...filteredTransactions].sort(
+      (a, b) => new Date(b.transaction_date) - new Date(a.transaction_date)
+    );
+
+    sorted.forEach((t, idx) => {
+      const row = sheet.addRow({
+        date: new Date(t.transaction_date).toLocaleDateString('en-GB'),
+        description: t.description,
+        category: t.category || 'Uncategorized',
+        amount: parseFloat(t.amount),
+      });
+      // Alternate row shading
+      if (idx % 2 === 0) {
+        row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0F9FF' } };
+      }
+      row.getCell('amount').numFmt = '#,##0.00';
+      row.getCell('amount').alignment = { horizontal: 'right' };
+    });
+
+    // Totals row
+    const totalRow = sheet.addRow({
+      date: '',
+      description: 'TOTAL',
+      category: '',
+      amount: monthStats.total,
+    });
+    totalRow.font = { bold: true };
+    totalRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBF0FF' } };
+    totalRow.getCell('amount').numFmt = '#,##0.00';
+    totalRow.getCell('amount').alignment = { horizontal: 'right' };
+
+    // Border on header
+    sheet.getRow(1).eachCell(cell => {
+      cell.border = {
+        bottom: { style: 'medium', color: { argb: 'FF12A7D4' } }
+      };
+    });
+
+    const filename = `Daily_Transactions_${monthLabel.replace(/ /g, '_')}.xlsx`;
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer], { type: 'application/octet-stream' }), filename);
+  };
 
   const totalTransactions = monthStats.total;
 
@@ -283,6 +351,15 @@ function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Fam
           }}
         >
           Jump to Current Month
+        </button>
+        <button
+          type="button"
+          className="chip-button export-btn"
+          onClick={exportToExcel}
+          disabled={filteredTransactions.length === 0}
+          title="Export visible transactions to Excel"
+        >
+          📥 Export to Excel
         </button>
       </div>
       <p className="filter-note">
