@@ -7,6 +7,7 @@
 DO $$
 DECLARE
   new_categories TEXT := '["Housing / Rent","Utilities","Groceries","Transportation","Fuel","Car Maintenance","Insurance","Medical","Pharmacy","Education","Kids Expenses","Entertainment","Dining Out","Shopping","Clothing","Travel","Savings","Investments","Credit Card Payments","Internet & Mobile","Subscriptions","Gifts","Charity","Household Items","Personal Care","Gym / Fitness","Pets","Maintenance & Repairs","Business Expenses","Emergency Fund","Taxes","Parking & Tolls","Electronics","Furniture","Coffee & Snacks","Miscellaneous"]';
+  updated_count INTEGER;
 BEGIN
 
   -- Update all existing users who have no categories set (NULL or empty)
@@ -14,7 +15,8 @@ BEGIN
   SET categories = new_categories
   WHERE categories IS NULL OR categories = '' OR categories = '[]';
 
-  RAISE NOTICE 'Updated % rows with no categories.', ROW_COUNT;
+  GET DIAGNOSTICS updated_count = ROW_COUNT;
+  RAISE NOTICE 'Updated % rows with no categories.', updated_count;
 
   -- Optional: update ALL users (overwrite existing categories too)
   -- Uncomment the lines below only if you want to replace everyone's categories

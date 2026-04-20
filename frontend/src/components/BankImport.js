@@ -255,7 +255,7 @@ export default function BankImport({ getAuthHeader, currency = 'SAR', categories
           <div className="bank-import-drop-icon">📂</div>
           <p className="bank-import-drop-text">Click to select CSV file</p>
           <p className="bank-import-drop-hint">
-            Supports AlRajhi debit, cashback card &amp; advance credit card formats • Auto-detected
+            Supports SABB debit, cashback card &amp; advance credit card formats • Auto-detected
           </p>
         </div>
       )}
