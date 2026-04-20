@@ -22,24 +22,28 @@ function parseDate(raw) {
 
 /** Extract a readable merchant name from the messy bank description */
 function extractMerchant(desc) {
-  // Format 2 (cashback card): strip leading 16-digit card number
+  // Format 2 (cashback / advance card): strip leading 16-digit card number
   const noCard = desc.replace(/^\d{16}/, '').trim();
 
-  // Format 1 (debit): merchant appears after bank code
-  const patterns = [
-    /(?:ALRAJHI|SABB|NCB|INMA|RIYAD|FRENCH|ALBI|ALINMA)[A-Z0-9 ]*?([A-Za-z][A-Za-z0-9 \-&'.]+?)(?:\u00d7|$)/,
-    /682002[A-Za-z0-9 ]*?([A-Za-z][A-Za-z0-9 \-&'.]+?)(?:\u00d7|$)/,
-  ];
-  for (const re of patterns) {
-    const m = desc.match(re);
-    if (m && m[1] && m[1].trim().length > 2) {
-      return m[1].trim().replace(/\s+/g, ' ');
-    }
+  // Format 1 (debit): merchant appears right after the bank code and ends at "بطاقة" or "×"
+  // e.g. "...RIYADH  INMAMtam Fraij Suwylahبطاقة مدى رقم..."
+  const debitMatch = desc.match(
+    /(?:ALRAJHI|SABB|NCB|INMA|RIYAD|FRENCH|ALBI|ALINMA|682002)([A-Za-z][^\u0600-\u06FF]{2,60?)(?:بطاقة|$)/
+  );
+  if (debitMatch && debitMatch[1]) {
+    return debitMatch[1]
+      .replace(/×.*$/, '')           // cut at × if present mid-string
+      .replace(/\s+[A-Z]{2,3}\s*$/, '') // trim trailing city codes e.g. RIY
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
-  // If card number was stripped, use what remains (trim trailing city code like RIY, BUR)
+  // If card number was stripped (cashback/advance format), use what remains
   if (noCard.length > 2) {
-    return noCard.replace(/\s+[A-Z]{3}$/, '').replace(/\s+/g, ' ').trim();
+    return noCard
+      .replace(/\s+[A-Z]{3}$/, '')   // trim trailing city code
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   // Fallback: last readable Latin segment

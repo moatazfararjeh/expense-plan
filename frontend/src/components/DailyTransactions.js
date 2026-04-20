@@ -18,6 +18,8 @@ function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Fam
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState('all');
   const [selectedYear, setSelectedYear] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const DAYS_PER_PAGE = 7;
 
   const months = [
     { value: 1, label: 'January' },
@@ -204,6 +206,13 @@ function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Fam
     availableYears.push(currentDate.getFullYear());
   }
 
+  const setFilterMonth = (v) => { setSelectedMonth(v); setCurrentPage(1); };
+  const setFilterYear  = (v) => { setSelectedYear(v);  setCurrentPage(1); };
+
+  // Pagination over day groups
+  const totalPages = Math.ceil(sortedDates.length / DAYS_PER_PAGE);
+  const pagedDates = sortedDates.slice((currentPage - 1) * DAYS_PER_PAGE, currentPage * DAYS_PER_PAGE);
+
   const monthLabel = selectedMonth === 'all' && selectedYear === 'all'
     ? 'All Time'
     : selectedMonth === 'all'
@@ -321,7 +330,7 @@ function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Fam
           <select
             id="filter-month"
             value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
+            onChange={(e) => setFilterMonth(e.target.value)}
           >
             <option value="all">All Months</option>
             {months.map(month => (
@@ -334,7 +343,7 @@ function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Fam
           <select
             id="filter-year"
             value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
+            onChange={(e) => setFilterYear(e.target.value)}
           >
             <option value="all">All Years</option>
             {availableYears.map(year => (
@@ -369,7 +378,7 @@ function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Fam
       <div className="transaction-list">
         {filteredTransactions.length > 0 ? (
           <>
-            {sortedDates.map(date => (
+            {pagedDates.map(date => (
               <div key={date} className="transaction-day-card">
                 <div className="transaction-day-header">
                   <div>
@@ -380,100 +389,81 @@ function DailyTransactions({ transactions, onAdd, onDelete, categories = ['  Fam
                     Day Total: {groupedByDate[date].reduce((sum, t) => sum + parseFloat(t.amount), 0).toLocaleString()} {currency}
                   </div>
                 </div>
-                {groupedByDate[date].map((transaction) => (
-                  <div key={transaction.id} className="transaction-entry">
-                    {editingId === transaction.id ? (
-                      <div className="transaction-edit-card">
-                        <div className="transaction-edit-grid">
-                          <div>
-                            <label>Description</label>
-                            <input
-                              type="text"
-                              value={editDescription}
-                              onChange={(e) => setEditDescription(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <label>Amount ({currency})</label>
-                            <input
-                              type="number"
-                              value={editAmount}
-                              onChange={(e) => setEditAmount(e.target.value)}
-                              step="0.01"
-                              min="0"
-                            />
-                          </div>
-                          <div>
-                            <label>Date</label>
-                            <div className="date-input-wrapper" onClick={() => document.getElementById('edit-trans-date').showPicker()}>
-                              <span className="date-icon">📅</span>
-                              <input
-                                type="date"
-                                id="edit-trans-date"
-                                className="date-input-field"
-                                value={editDate}
-                                onChange={(e) => setEditDate(e.target.value)}
-                              />
+
+                {/* Compact table for transactions */}
+                <table className="trans-compact-table">
+                  <tbody>
+                    {groupedByDate[date].map((transaction) => (
+                      <tr key={transaction.id}>
+                        {editingId === transaction.id ? (
+                          <td colSpan={4}>
+                            <div className="transaction-edit-card">
+                              <div className="transaction-edit-grid">
+                                <div>
+                                  <label>Description</label>
+                                  <input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+                                </div>
+                                <div>
+                                  <label>Amount ({currency})</label>
+                                  <input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} step="0.01" min="0" />
+                                </div>
+                                <div>
+                                  <label>Date</label>
+                                  <div className="date-input-wrapper" onClick={() => document.getElementById('edit-trans-date').showPicker()}>
+                                    <span className="date-icon">📅</span>
+                                    <input type="date" id="edit-trans-date" className="date-input-field" value={editDate} onChange={(e) => setEditDate(e.target.value)} />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label>Category</label>
+                                  <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)}>
+                                    {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="transaction-edit-actions">
+                                <button type="button" className="btn btn-primary" onClick={() => updateTransaction(transaction.id)}>Save</button>
+                                <button type="button" className="btn btn-secondary" onClick={cancelEdit}>Cancel</button>
+                              </div>
                             </div>
-                          </div>
-                          <div>
-                            <label>Category</label>
-                            <select
-                              value={editCategory}
-                              onChange={(e) => setEditCategory(e.target.value)}
-                            >
-                              {categories.map(cat => (
-                                <option key={cat} value={cat}>{cat}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                        <div className="transaction-edit-actions">
-                          <button
-                            type="button"
-                            className="btn btn-primary"
-                            onClick={() => updateTransaction(transaction.id)}
-                          >
-                            Save
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-secondary"
-                            onClick={cancelEdit}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="transaction-entry-content">
-                          <p className="transaction-desc">{transaction.description}</p>
-                          <span className="category-chip">{transaction.category}</span>
-                        </div>
-                        <div className="transaction-entry-actions">
-                          <span className="transaction-amount">{parseFloat(transaction.amount).toLocaleString()} {currency}</span>
-                          <button 
-                            className="chip-button"
-                            type="button"
-                            onClick={() => startEdit(transaction)}
-                          >
-                            Edit
-                          </button>
-                          <button 
-                            className="btn btn-danger"
-                            type="button"
-                            onClick={() => onDelete(transaction.id)}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))}
+                          </td>
+                        ) : (
+                          <>
+                            <td className="trans-cell-desc" title={transaction.description}>
+                              {transaction.description.length > 38
+                                ? transaction.description.substring(0, 38) + '…'
+                                : transaction.description}
+                            </td>
+                            <td className="trans-cell-cat">
+                              <span className="category-chip">{transaction.category}</span>
+                            </td>
+                            <td className="trans-cell-amount">
+                              {parseFloat(transaction.amount).toLocaleString()} {currency}
+                            </td>
+                            <td className="trans-cell-actions">
+                              <button className="trans-icon-btn" type="button" onClick={() => startEdit(transaction)} title="Edit">✏️</button>
+                              <button className="trans-icon-btn danger" type="button" onClick={() => onDelete(transaction.id)} title="Delete">🗑️</button>
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             ))}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="trans-pagination">
+                <button className="trans-page-btn" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
+                <button className="trans-page-btn" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>‹</button>
+                <span className="trans-page-info">Page {currentPage} of {totalPages}</span>
+                <button className="trans-page-btn" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>›</button>
+                <button className="trans-page-btn" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
+              </div>
+            )}
+
             <div className="module-highlight positive">
               {monthLabel} Total: {totalTransactions.toLocaleString()} {currency}
             </div>
