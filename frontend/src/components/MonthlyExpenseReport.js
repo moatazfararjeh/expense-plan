@@ -186,7 +186,7 @@ function MonthlyExpenseReport({
 
   const monthlyData = groupExpensesByMonth();
 
-  // Collapse state: set of month keys that are collapsed
+  // Collapse state: set of month keys that are collapsed (month-level)
   const [collapsedMonths, setCollapsedMonths] = useState(new Set());
   const toggleMonth = (key) => setCollapsedMonths(prev => {
     const next = new Set(prev);
@@ -195,6 +195,17 @@ function MonthlyExpenseReport({
   });
   const collapseAll  = () => setCollapsedMonths(new Set(monthlyData.map(m => m.date)));
   const expandAll    = () => setCollapsedMonths(new Set());
+
+  // Collapse state for type sections within a month: key = "month|type"
+  const [collapsedSections, setCollapsedSections] = useState(new Set());
+  const toggleSection = (key, e) => {
+    e.stopPropagation();
+    setCollapsedSections(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
 
   const reportStats = useMemo(() => {
     return monthlyData.reduce(
@@ -582,8 +593,6 @@ function MonthlyExpenseReport({
           ...monthData.expenses,
           ...monthData.dailyTransactions
         ];
-        
-        const totalRows = allItems.length;
 
         // Determine month financial health status
         const utilization = monthTotalIncome > 0 ? (grandTotal / monthTotalIncome) * 100 : 0;
@@ -710,93 +719,74 @@ function MonthlyExpenseReport({
                   </tr>
                 )}
                 
-                {/* First row with date */}
-                {allItems.length > 0 ? (
-                  <>
-                    <tr>
-                      <td className="date-cell" rowSpan={totalRows + (broughtForward !== 0 ? 0 : 1)}>
-                        {broughtForward !== 0 ? '' : monthData.date}
-                      </td>
-                      <td className={`expense-name ${allItems[0].type === 'daily' ? 'daily-item' : ''}`}>
-                        {allItems[0].type === 'daily' && (
-                          <span className="daily-badge">Daily</span>
-                        )}
-                        {allItems[0].cashFor}
-                      </td>
-                      <td className="expense-amount">{allItems[0].amount.toLocaleString()}</td>
-                      <td className="percentage-cell">
-                        {monthTotalIncome > 0 && (
-                          <span style={{ color: getPercentageColor(calculatePercentage(allItems[0].amount, monthTotalIncome)), fontWeight: 'bold' }}>
-                            {calculatePercentage(allItems[0].amount, monthTotalIncome)}%
-                          </span>
-                        )}
-                      </td>
-                      <td className="total-cell" rowSpan={totalRows}>
-                        {grandTotal.toLocaleString()}
-                      </td>
-                      <td className="currency-label">Salary</td>
-                      <td className="salary-value">{formatSalary(currentSalary)}</td>
-                    </tr>
-
-                    {/* Remaining item rows */}
-                    {allItems.slice(1).map((item, idx) => (
-                      <tr key={idx}>
-                        <td className={`expense-name ${item.type === 'daily' ? 'daily-item' : ''}`}>
-                          {item.type === 'daily' && (
-                            <span className="daily-badge">Daily</span>
-                          )}
-                          {item.cashFor}
+                {/* ── RECURRING section ── */}
+                {monthData.expenses.length > 0 && (() => {
+                  const secKey = `${monthData.date}|recurring`;
+                  const collapsed = collapsedSections.has(secKey);
+                  return (
+                    <>
+                      <tr className="section-group-header recurring-group" onClick={(e) => toggleSection(secKey, e)}>
+                        <td colSpan="7">
+                          <span className="section-collapse-icon">{collapsed ? '▶' : '▼'}</span>
+                          📋 Recurring Expenses
+                          <span className="section-group-total">{recurringTotal.toLocaleString()} {currency}</span>
                         </td>
-                        <td className="expense-amount">{item.amount.toLocaleString()}</td>
-                        <td className="percentage-cell">
-                          {monthTotalIncome > 0 && (
-                            <span style={{ color: getPercentageColor(calculatePercentage(item.amount, monthTotalIncome)), fontWeight: 'bold' }}>
-                              {calculatePercentage(item.amount, monthTotalIncome)}%
-                            </span>
-                          )}
-                        </td>
-                        {idx === 0 && monthAdditionalIncome > 0 && (
-                          <>
-                            <td className="currency-label">Additional Income</td>
-                            <td className="salary-value" style={{ color: '#10b981' }}>
-                              +{monthAdditionalIncome.toLocaleString(undefined, { minimumFractionDigits: 1 })}
-                            </td>
-                          </>
-                        )}
-                        {idx === (monthAdditionalIncome > 0 ? 1 : 0) && (
-                          <>
-                            <td className="currency-label">Monthly Net</td>
-                            <td className={`date-cell ${monthlyNet >= 0 ? 'positive' : 'negative'}`}>
-                              {monthlyNet.toLocaleString(undefined, { minimumFractionDigits: 1 })}
-                            </td>
-                          </>
-                        )}
-                        {idx === (monthAdditionalIncome > 0 ? 2 : 1) && broughtForward !== 0 && (
-                          <>
-                            <td className="currency-label">Brought Forward</td>
-                            <td className={`date-cell ${broughtForward >= 0 ? 'positive' : 'negative'}`}>
-                              {broughtForward >= 0 ? '+' : ''}{broughtForward.toLocaleString(undefined, { minimumFractionDigits: 1 })}
-                            </td>
-                          </>
-                        )}
-                        {idx === (broughtForward !== 0 ? (monthAdditionalIncome > 0 ? 3 : 2) : (monthAdditionalIncome > 0 ? 2 : 1)) && (
-                          <>
-                            <td className="currency-label final-balance-label">Final Balance</td>
-                            <td className={`remaining-value final-balance ${remaining >= 0 ? 'positive' : 'negative'}`}>
-                              {remaining.toLocaleString(undefined, { minimumFractionDigits: 1 })}
-                            </td>
-                          </>
-                        )}
-                        {(idx > (broughtForward !== 0 ? (monthAdditionalIncome > 0 ? 3 : 2) : (monthAdditionalIncome > 0 ? 2 : 1))) && (
-                          <>
-                            <td></td>
-                            <td></td>
-                          </>
-                        )}
                       </tr>
-                    ))}
-                  </>
-                ) : (
+                      {!collapsed && monthData.expenses.map((item, idx) => (
+                        <tr key={`r-${idx}`} className="expense-row recurring-row">
+                          <td className="date-cell"></td>
+                          <td className="expense-name">{item.cashFor}</td>
+                          <td className="expense-amount">{item.amount.toLocaleString()}</td>
+                          <td className="percentage-cell">
+                            {monthTotalIncome > 0 && (
+                              <span style={{ color: getPercentageColor(calculatePercentage(item.amount, monthTotalIncome)), fontWeight: 'bold' }}>
+                                {calculatePercentage(item.amount, monthTotalIncome)}%
+                              </span>
+                            )}
+                          </td>
+                          <td></td><td></td><td></td>
+                        </tr>
+                      ))}
+                    </>
+                  );
+                })()}
+
+                {/* ── DAILY section ── */}
+                {monthData.dailyTransactions.length > 0 && (() => {
+                  const secKey = `${monthData.date}|daily`;
+                  const collapsed = collapsedSections.has(secKey);
+                  return (
+                    <>
+                      <tr className="section-group-header daily-group" onClick={(e) => toggleSection(secKey, e)}>
+                        <td colSpan="7">
+                          <span className="section-collapse-icon">{collapsed ? '▶' : '▼'}</span>
+                          💳 Daily Transactions
+                          <span className="section-group-total">{dailyTotal.toLocaleString()} {currency}</span>
+                        </td>
+                      </tr>
+                      {!collapsed && monthData.dailyTransactions.map((item, idx) => (
+                        <tr key={`d-${idx}`} className="expense-row daily-row">
+                          <td className="date-cell">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day:'2-digit', month:'short' }) : ''}</td>
+                          <td className="expense-name daily-item">
+                            <span className="daily-badge">Daily</span>
+                            {item.cashFor}
+                          </td>
+                          <td className="expense-amount">{item.amount.toLocaleString()}</td>
+                          <td className="percentage-cell">
+                            {monthTotalIncome > 0 && (
+                              <span style={{ color: getPercentageColor(calculatePercentage(item.amount, monthTotalIncome)), fontWeight: 'bold' }}>
+                                {calculatePercentage(item.amount, monthTotalIncome)}%
+                              </span>
+                            )}
+                          </td>
+                          <td></td><td></td><td></td>
+                        </tr>
+                      ))}
+                    </>
+                  );
+                })()}
+
+                {allItems.length === 0 && (
                   <tr>
                     <td className="date-cell">{monthData.date}</td>
                     <td className="expense-name">No expenses</td>
